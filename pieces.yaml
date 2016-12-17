@@ -1,0 +1,133 @@
+# Standard shogi
+
+K:
+  betza: K
+  flags:
+    - royal 
+R:
+  betza: R
+B:
+  betza: B
+G:
+  betza: WfF
+S:
+  betza: FfW
+N:
+  betza: ffN
+L:
+  betza: fR
+P:
+  betza: fW
+  flags:
+    - max_1_per_column
+    - no_drop_mate
+
++R:
+  betza: FR
++B:
+  betza: WB
++S:
+  betza: WfF
++N:
+  betza: WfF
++L:
+  betza: WfF
++P:
+  betza: WfF
+
+# Wa shogi
+
+CE:
+  betza: fbRfB3K
+TF:
+  betza: fbWFfbDA
+FF:
+  betza: fWB
+RR:
+  betza: fRFbW
+VW:
+  betza: WfF
+VS:
+  betza: FfW
+BD:
+  betza: fFrlbW
+CM:
+  betza: fFfbW
+FG:
+  betza: fFfbW
+FC:
+  betza: fFrlW
+SW:
+  betza: WrlR
+SC:
+  betza: fWbF
+SO:
+  betza: fWbF
+LH:
+  betza: fRbR2
+OC:
+  betza: fR
+
++FF:
+  betza: fFrlW
++RR:
+  betza: fbWFfbDA
++VW:
+  betza: K
++VS:
+  betza: FfrlW
++BD:
+  betza: WfF
++CM:
+  betza: FfW
++FG:
+  betza: WrlR
++FC:
+  betza: fbRWfF
++SW:
+  betza: R
++SC:
+  betza: fWB
++SO:
+  betza: fbRfB3K
++LH:
+  betza: ffbbN
++OC:
+  betza: K
+
+# Tori shogi
+
+F':
+  betza: FfrlW
+C':
+  betza: FfbW
+P':
+  betza: fDbF
+L':
+  betza: fRbrBblF
+R':
+  betza: fRblBbrF
+S':
+  betza: fW
+  flags:
+    - max_2_per_column
+    - no_drop_mate
+
++F':
+  betza: fBbRWbB2
++S':
+  betza: fAbD
+
+# Okisaki shogi
+
+Q':
+  betza: Q
+N':
+  betza: N
+A':
+  betza: fbR
+
++N':
+  betza: WfF
++A':
+  betza: WfF
