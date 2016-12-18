@@ -12,6 +12,10 @@ class Betza:
         for token in tokens:
             self._parse(*token)
 
+    # i.e. no legal moves on subsequent turns if dropped or not promoted
+    def num_restricted_furthest_ranks(self):
+        return max(self.min_dy, 0)
+
     def _parse(self, modifiers, piece, range):
         if not range:
             if piece in ['B', 'Q', 'R']:
@@ -90,6 +94,9 @@ class Betza:
                 self.directions[(dx, dy)] = range
         else:
             self.directions[(dx, dy)] = range
+
+        if not hasattr(self, 'min_dy') or dy < self.min_dy:
+            self.min_dy = dy
 
     @staticmethod
     def _coordinates(m, n):
