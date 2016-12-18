@@ -49,7 +49,7 @@ class Betza:
                 list_modifiers = re.findall(r"[bflr]", modifiers)
             else:       # diagonal/oblique
                 list_modifiers = [x[0] for x in
-                        re.findall(r"(bl|br|fl|fr|([bflr])(\2?))", modifiers)]
+                        re.findall(r"(bl|br|fl|fr|([bflr])\2?)", modifiers)]
 
         for coordinate in self._coordinates(m, n):
             dx, dy = coordinate
