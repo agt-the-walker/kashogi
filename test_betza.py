@@ -36,11 +36,31 @@ class BetzaTestCase(unittest.TestCase):
                  (-1, 0): 1,            (1, 0): 1,
                              (0,-1): 1           })
 
+    def test_charging_knight(self):
+        self.assertEqual(Betza('fNrrllbK').directions,
+                {            (-1, 2): 1,            (1, 2): 1,
+                 (-2, 1): 1,                                   (2, 1): 1,
+                             (-1, 0): 1,            (1, 0): 1,
+                             (-1,-1): 1, (0,-1): 1, (1,-1): 1           })
+
+    def test_charging_rook(self):
+        self.assertEqual(Betza('frlRrrllbK').directions,
+                {            (0, 1): 0,
+                 (-1, 0): 0,            (1, 0): 0,
+                 (-1,-1): 1, (0,-1): 1, (1,-1): 1})
+
     def test_cloud_eagle(self):
         self.assertEqual(Betza('fbRfB3K').directions,
                 {(-1, 1): 3, (0, 1): 0, (1, 1): 3,
                  (-1, 0): 1,            (1, 0): 1,
                  (-1,-1): 1, (0,-1): 0, (1,-1): 1})
+
+    def test_colonel(self):
+        self.assertEqual(Betza('fNfrlRK').directions,
+                {            (-1, 2): 1,            (1, 2): 1,
+                 (-2, 1): 1, (-1, 1): 1, (0, 1): 0, (1, 1): 1, (2, 1): 1,
+                             (-1, 0): 0,            (1, 0): 0,
+                             (-1,-1): 1, (0,-1): 1, (1,-1): 1           })
 
     def test_eagle(self):
         self.assertEqual(Betza('fBbRWbB2').directions,
@@ -53,6 +73,13 @@ class BetzaTestCase(unittest.TestCase):
                 {(-1, 1): 1, (0, 1): 1, (1, 1): 1,
                  (-1, 0): 1,            (1, 0): 1,
                  (-1,-1): 1,            (1,-1): 1})
+
+    def test_fibnif(self):
+        self.assertEqual(Betza('ffbbNF').directions,
+                {(-1, 2): 1, (1, 2): 1,
+                 (-1, 1): 1, (1, 1): 1,
+                 (-1,-1): 1, (1,-1): 1,
+                 (-1,-2): 1, (1,-2): 1})
 
     def test_heavenly_horse(self):
         self.assertEqual(Betza('ffbbN').directions,
