@@ -8,6 +8,11 @@ class PiecesTestCase(unittest.TestCase):
     def test_normal_path(self):
         Pieces()
 
+    def test_invalid_abbreviation(self):
+        with self.assertRaisesRegex(PiecesException,
+                'Invalid piece abbreviation: Ph'):
+            Pieces('support/invalid_abbreviation.yaml')
+
     def test_cannot_advance(self):
         with self.assertRaisesRegex(PiecesException, 'Piece P cannot advance'):
             Pieces('support/cannot_advance.yaml')

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import re
 import yaml
 
 from betza import Betza
@@ -14,6 +15,9 @@ class Pieces:
 
         abbrevs = set()
         for abbrev, info in doc.items():
+            if not re.match("\+?[A-Z]['A-Z]?$", abbrev):
+                raise PiecesException('Invalid piece abbreviation: %s' % abbrev)
+
             betza = Betza(info['betza'])
             if not betza.can_advance():
                 raise PiecesException('Piece %s cannot advance' % abbrev)
