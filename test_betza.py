@@ -86,10 +86,15 @@ class BetzaTestCase(unittest.TestCase):
                 {(-1, 2): 1, (1, 2): 1,
                  (-1,-2): 1, (1,-2): 1})
 
+    def test_inverted_pawn(self):
+        self.check('bW',
+                {(0, -1): 1},
+                0, False, True)
+
     def test_lance(self):
         self.check('fR',
                 {(0, 1): 0},
-                1)
+                1, True, False)
 
     def test_left_quail(self):
         self.check('fRbrBblF',
@@ -104,7 +109,7 @@ class BetzaTestCase(unittest.TestCase):
     def test_pawn(self):
         self.check('fW',
                 {(0, 1): 1},
-                1)
+                1, True, False)
 
     def test_right_quail(self):
         self.check('fRblBbrF',
@@ -119,7 +124,7 @@ class BetzaTestCase(unittest.TestCase):
     def test_shogi_knight(self):
         self.check('ffN',
                 {(-1, 2): 1, (1, 2): 1},
-                2)
+                2, True, False)
 
     def test_treacherous_fox(self):
         self.check('fbWFfbDA',
@@ -134,11 +139,14 @@ class BetzaTestCase(unittest.TestCase):
                 {(-2, 1): 1, (2, 1): 1,
                  (-2,-1): 1, (2,-1): 1})
 
-    def check(self, notation, expected_directions, expected_num_restricted=0):
+    def check(self, notation, expected_directions, expected_num_restricted=0,
+              expected_can_advance=True, expected_can_retreat=True):
         betza = Betza(notation)
         self.assertEqual(betza.directions, expected_directions)
         self.assertEqual(betza.num_restricted_furthest_ranks(),
                 expected_num_restricted)
+        self.assertEqual(betza.can_advance(), expected_can_advance)
+        self.assertEqual(betza.can_retreat(), expected_can_retreat)
 
 
 if __name__ == '__main__':

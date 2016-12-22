@@ -12,6 +12,12 @@ class Betza:
         for token in tokens:
             self._parse(*token)
 
+    def can_advance(self):
+        return self.max_dy > 0
+
+    def can_retreat(self):
+        return self.min_dy < 0
+
     # i.e. no legal moves on subsequent turns if dropped or not promoted
     def num_restricted_furthest_ranks(self):
         return max(self.min_dy, 0)
@@ -97,6 +103,8 @@ class Betza:
 
         if not hasattr(self, 'min_dy') or dy < self.min_dy:
             self.min_dy = dy
+        if not hasattr(self, 'max_dy') or dy > self.max_dy:
+            self.max_dy = dy
 
     @staticmethod
     def _coordinates(m, n):
