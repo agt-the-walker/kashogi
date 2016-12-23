@@ -15,6 +15,9 @@ class PositionTestCase(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Too few files: 2 <'):
             Position('k1/2/1K b -')
 
+    def test_invalid_piece(self):
+        with self.assertRaisesRegex(ValueError, 'Invalid piece in SFEN: Z'):
+            Position('k1Z/3/2K b -')
 
     def test_missing_plies_on_minishogi(self):
         self.check('rbsgk/4p/5/P4/KGSBR b -', 5, 5)

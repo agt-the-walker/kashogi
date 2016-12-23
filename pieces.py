@@ -11,10 +11,10 @@ class PiecesException(Exception):
 class Pieces:
     def __init__(self, filename='pieces.yaml'):
         with open(filename, 'r') as stream:
-            doc = yaml.load(stream)
+            self._doc = yaml.load(stream)
 
         abbrevs = set()
-        for abbrev, info in doc.items():
+        for abbrev, info in self._doc.items():
             if not re.match("\+?[A-Z]['A-Z]?$", abbrev):
                 raise PiecesException('Invalid piece abbreviation: {}'
                         .format(abbrev))
@@ -28,10 +28,13 @@ class Pieces:
 
             abbrevs.add(abbrev)
 
-        for abbrev in doc:
+        for abbrev in self._doc:
             if self._promoted(abbrev) and abbrev[1:] not in abbrevs:
                 raise PiecesException('Unpromoted version of {} missing'
                         .format(abbrev))
+
+    def exist(self, abbrev):
+        return abbrev in self._doc
 
     @staticmethod
     def _promoted(abbrev):

@@ -8,7 +8,7 @@ class Position:
     MIN_SIZE = 3
 
     def __init__(self, sfen):
-        pieces = Pieces()
+        self._pieces = Pieces()
 
         m = re.match("(\S+) [wb] \S+( [1-9][0-9]*)?$", sfen)
         if not m:
@@ -37,13 +37,15 @@ class Position:
         return self._num_files
 
     def _parse_rank(self, rank):
-        tokens = re.findall("\+?[a-zA-Z](?:[a-zA-Z]@|')?|\d+", rank)
+        tokens = re.findall("\+?[a-zA-Z](?:[a-zA-Z](?=@)|')?|\d+", rank)
         num_files = 0
 
         for token in tokens:
             if token.isdigit():
                 num_files += int(token)
             else:
+                if not self._pieces.exist(token.upper()):
+                    raise ValueError('Invalid piece in SFEN: {}'.format(token))
                 num_files += 1
 
         if num_files > self._num_files:
