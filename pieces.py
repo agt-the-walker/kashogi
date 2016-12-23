@@ -4,7 +4,6 @@ import re
 import yaml
 
 from betza import Betza
-from collections import defaultdict
 
 class PiecesException(Exception):
     pass

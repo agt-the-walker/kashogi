@@ -23,6 +23,7 @@ class Position:
 
         self._num_files = 0
         self._num_royals = [0] * self.NUM_PLAYERS
+
         for rank in ranks:
             self._parse_rank(rank)
 
