@@ -38,6 +38,11 @@ class PiecesTestCase(unittest.TestCase):
                 'Unpromoted version of \+P missing'):
             Pieces('support/cannot_unpromote.yaml')
 
+    def test_can_change_file(self):
+        with self.assertRaisesRegex(PiecesException,
+                'Piece P can change files'):
+            Pieces('support/can_change_files.yaml')
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -15,7 +15,8 @@ class Pieces:
             doc = yaml.load(stream)
 
         self._betza = {}
-        self._flags = defaultdict(lambda: set())
+        self._royal = set()
+        self._max_per_file = set()
 
         for abbrev, info in doc.items():
             if not re.match("\+?[A-Z]['A-Z]?$", abbrev):
@@ -24,7 +25,11 @@ class Pieces:
 
             self._betza[abbrev] = Betza(info['betza'])
             if 'flags' in info:
-                self._flags[abbrev] = set(info['flags'])
+                for flag in info['flags']:
+                    if flag == 'royal':
+                        self._royal.add(abbrev)
+                    if re.match("max_[1-9][0-9]*_per_file$", flag):
+                        self._max_per_file.add(abbrev)
 
         for abbrev, betza in self._betza.items():
             if not betza.can_advance():
@@ -42,11 +47,15 @@ class Pieces:
                 raise PiecesException('Unpromotable piece {} cannot retreat'
                         .format(abbrev))
 
+            if betza.can_change_file() and abbrev in self._max_per_file:
+                raise PiecesException('Piece {} can change files'
+                        .format(abbrev))
+
     def exist(self, abbrev):
         return abbrev in self._betza
 
     def is_royal(self, abbrev):
-        return 'royal' in self._flags[abbrev]
+        return abbrev in self._royal
 
     @staticmethod
     def _promoted(abbrev):

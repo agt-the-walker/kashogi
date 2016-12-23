@@ -89,12 +89,12 @@ class BetzaTestCase(unittest.TestCase):
     def test_inverted_pawn(self):
         self.check('bW',
                 {(0, -1): 1},
-                0, False, True)
+                0, False, True, False)
 
     def test_lance(self):
         self.check('fR',
                 {(0, 1): 0},
-                1, True, False)
+                1, True, False, False)
 
     def test_left_quail(self):
         self.check('fRbrBblF',
@@ -109,7 +109,7 @@ class BetzaTestCase(unittest.TestCase):
     def test_pawn(self):
         self.check('fW',
                 {(0, 1): 1},
-                1, True, False)
+                1, True, False, False)
 
     def test_right_quail(self):
         self.check('fRblBbrF',
@@ -140,13 +140,15 @@ class BetzaTestCase(unittest.TestCase):
                  (-2,-1): 1, (2,-1): 1})
 
     def check(self, notation, expected_directions, expected_num_restricted=0,
-              expected_can_advance=True, expected_can_retreat=True):
+              expected_can_advance=True, expected_can_retreat=True,
+              expected_can_change_file=True):
         betza = Betza(notation)
         self.assertEqual(betza.directions, expected_directions)
         self.assertEqual(betza.num_restricted_furthest_ranks(),
                 expected_num_restricted)
         self.assertEqual(betza.can_advance(), expected_can_advance)
         self.assertEqual(betza.can_retreat(), expected_can_retreat)
+        self.assertEqual(betza.can_change_file(), expected_can_change_file)
 
 
 if __name__ == '__main__':

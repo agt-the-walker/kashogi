@@ -19,7 +19,7 @@ L:
 P:
   betza: fW
   flags:
-    - max_1_per_column
+    - max_1_per_file
     - no_drop_mate
 
 +R:
@@ -110,7 +110,7 @@ R':
 S':
   betza: fW
   flags:
-    - max_2_per_column
+    - max_2_per_file
     - no_drop_mate
 
 +F':

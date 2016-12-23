@@ -22,6 +22,9 @@ class Betza:
     def can_retreat(self):
         return self.min_dy < 0
 
+    def can_change_file(self):
+        return self.min_dx < 0 < self.max_dx
+
     # i.e. no legal moves on subsequent turns if dropped or not promoted
     def num_restricted_furthest_ranks(self):
         return max(self.min_dy, 0)
@@ -105,8 +108,13 @@ class Betza:
         else:
             self.directions[(dx, dy)] = range
 
+        if not hasattr(self, 'min_dx') or dx < self.min_dx:
+            self.min_dx = dx
         if not hasattr(self, 'min_dy') or dy < self.min_dy:
             self.min_dy = dy
+
+        if not hasattr(self, 'max_dx') or dx > self.max_dx:
+            self.max_dx = dx
         if not hasattr(self, 'max_dy') or dy > self.max_dy:
             self.max_dy = dy
 
