@@ -52,28 +52,30 @@ class Position:
             if token.isdigit():
                 file += int(token)
             else:
-                abbrev = token.upper()
-                if not self._pieces.exist(abbrev):
-                    raise ValueError('Invalid piece in SFEN: {}'.format(token))
-                player = 0 if abbrev == token else 1
-
-                if self._pieces.is_royal(abbrev):
-                    self._num_royals[player] += 1
-                    if self._num_royals[player] > 1:
-                        raise ValueError('Too many royal pieces for {}'
-                                .format(self._player_name(player)))
                 file += 1
-
-                max_per_file = self._pieces.max_per_file(abbrev)
-                if max_per_file:
-                    self._num_per_file[player][abbrev][file] += 1
-                    if self._num_per_file[player][abbrev][file] > max_per_file:
-                        raise ValueError('Too many {} for {} on file {}'
-                                .format(abbrev, self._player_name(player),
-                                        file))
+                self._parse_piece(token, file)
 
         if file > self._num_files:
             self._num_files = file
+
+    def _parse_piece(self, token, file):
+        abbrev = token.upper()
+        if not self._pieces.exist(abbrev):
+            raise ValueError('Invalid piece in SFEN: {}'.format(token))
+        player = 0 if abbrev == token else 1
+
+        if self._pieces.is_royal(abbrev):
+            self._num_royals[player] += 1
+            if self._num_royals[player] > 1:
+                raise ValueError('Too many royal pieces for {}'
+                        .format(self._player_name(player)))
+
+        max_per_file = self._pieces.max_per_file(abbrev)
+        if max_per_file:
+            self._num_per_file[player][abbrev][file] += 1
+            if self._num_per_file[player][abbrev][file] > max_per_file:
+                raise ValueError('Too many {} for {} on file {}'
+                        .format(abbrev, self._player_name(player), file))
 
     def _player_name(self, player):
         assert player < self.NUM_PLAYERS
