@@ -15,7 +15,7 @@ class Pieces:
 
         self._betza = {}
         self._royal = set()
-        self._max_per_file = set()
+        self._max_per_file = {}
 
         for abbrev, info in doc.items():
             if not re.match("\+?[A-Z]['A-Z]?$", abbrev):
@@ -27,8 +27,9 @@ class Pieces:
                 for flag in info['flags']:
                     if flag == 'royal':
                         self._royal.add(abbrev)
-                    if re.match("max_[1-9][0-9]*_per_file$", flag):
-                        self._max_per_file.add(abbrev)
+                    m = re.match("max_([1-9][0-9]*)_per_file$", flag)
+                    if m:
+                        self._max_per_file[abbrev] = int(m.group(1))
 
         for abbrev, betza in self._betza.items():
             if not betza.can_advance():
@@ -55,6 +56,9 @@ class Pieces:
 
     def is_royal(self, abbrev):
         return abbrev in self._royal
+
+    def max_per_file(self, abbrev):
+        return self._max_per_file.get(abbrev)
 
     @staticmethod
     def _promoted(abbrev):

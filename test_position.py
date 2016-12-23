@@ -27,6 +27,14 @@ class PositionTestCase(unittest.TestCase):
                 'Too many royal pieces for black'):
             Position('r2/3/K1K b -')
 
+    def test_too_many_pawns_on_file(self):
+        with self.assertRaisesRegex(ValueError,
+                'Too many P for white on file 3'):
+            Position('3/2p/2p/P1P b -')
+        with self.assertRaisesRegex(ValueError,
+                "Too many S' for black on file 2"):
+            Position("s'2/s'S'1/1S'1/1S'1 b -")
+
     def test_missing_plies_on_minishogi(self):
         self.check('rbsgk/4p/5/P4/KGSBR b -', 5, 5)
 

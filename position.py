@@ -2,6 +2,7 @@
 
 import re
 
+from collections import defaultdict
 from pieces import Pieces
 
 class Position:
@@ -24,6 +25,10 @@ class Position:
         self._num_files = 0
         self._num_royals = [0] * self.NUM_PLAYERS
 
+        # the following data structure is indexed by [player][abbrev][file]
+        self._num_per_file = [defaultdict(lambda: defaultdict(int))
+                for count in range(self.NUM_PLAYERS)]
+
         for rank in ranks:
             self._parse_rank(rank)
 
@@ -41,26 +46,34 @@ class Position:
 
     def _parse_rank(self, rank):
         tokens = re.findall("\+?[a-zA-Z](?:[a-zA-Z](?=@)|')?|\d+", rank)
-        num_files = 0
+        file = 0
 
         for token in tokens:
             if token.isdigit():
-                num_files += int(token)
+                file += int(token)
             else:
                 abbrev = token.upper()
                 if not self._pieces.exist(abbrev):
                     raise ValueError('Invalid piece in SFEN: {}'.format(token))
+                player = 0 if abbrev == token else 1
 
                 if self._pieces.is_royal(abbrev):
-                    player = 0 if abbrev == token else 1
                     self._num_royals[player] += 1
                     if self._num_royals[player] > 1:
                         raise ValueError('Too many royal pieces for {}'
                                 .format(self._player_name(player)))
-                num_files += 1
+                file += 1
 
-        if num_files > self._num_files:
-            self._num_files = num_files
+                max_per_file = self._pieces.max_per_file(abbrev)
+                if max_per_file:
+                    self._num_per_file[player][abbrev][file] += 1
+                    if self._num_per_file[player][abbrev][file] > max_per_file:
+                        raise ValueError('Too many {} for {} on file {}'
+                                .format(abbrev, self._player_name(player),
+                                        file))
+
+        if file > self._num_files:
+            self._num_files = file
 
     def _player_name(self, player):
         assert player < self.NUM_PLAYERS

@@ -16,6 +16,10 @@ class PiecesTestCase(unittest.TestCase):
         self.assertTrue(pieces.is_royal('K'))
         self.assertFalse(pieces.is_royal('N'))
 
+        self.assertIsNone(pieces.max_per_file('K'))
+        self.assertEqual(pieces.max_per_file('P'), 1)
+        self.assertEqual(pieces.max_per_file("S'"), 2)
+
     def test_invalid_abbreviation(self):
         with self.assertRaisesRegex(PiecesException,
                 'Invalid piece abbreviation: Ph'):
