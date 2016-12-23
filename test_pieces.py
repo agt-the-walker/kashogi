@@ -28,7 +28,10 @@ class PiecesTestCase(unittest.TestCase):
     def test_cannot_retreat(self):
         with self.assertRaisesRegex(PiecesException,
                 'Promoted piece \+P cannot retreat'):
-            Pieces('support/cannot_retreat.yaml')
+            Pieces('support/cannot_retreat_promoted.yaml')
+        with self.assertRaisesRegex(PiecesException,
+                'Unpromotable piece L cannot retreat'):
+            Pieces('support/cannot_retreat_unpromotable.yaml')
 
     def test_cannot_unpromote(self):
         with self.assertRaisesRegex(PiecesException,
