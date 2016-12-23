@@ -4,7 +4,7 @@ import re
 
 class Betza:
     def __init__(self, notation):
-        tokens = re.findall(r"([a-z]*)([A-Z])([1-9][0-9]*)?", notation)
+        tokens = re.findall("([a-z]*)([A-Z])([1-9][0-9]*)?", notation)
         if not tokens:
             raise ValueError('No token found')
 
@@ -52,7 +52,7 @@ class Betza:
 
         if modifiers:
             if m == 0:  # orthogonal
-                list_modifiers = re.findall(r"[bflr]", modifiers)
+                list_modifiers = re.findall("[bflr]", modifiers)
             else:       # diagonal/oblique
                 list_modifiers = [x[0] for x in
                         re.findall(r"(bl|br|fl|fr|([bflr])\2?)", modifiers)]
