@@ -16,20 +16,22 @@ class Pieces:
         abbrevs = set()
         for abbrev, info in doc.items():
             if not re.match("\+?[A-Z]['A-Z]?$", abbrev):
-                raise PiecesException('Invalid piece abbreviation: %s' % abbrev)
+                raise PiecesException('Invalid piece abbreviation: {}'
+                        .format(abbrev))
 
             betza = Betza(info['betza'])
             if not betza.can_advance():
-                raise PiecesException('Piece %s cannot advance' % abbrev)
+                raise PiecesException('Piece {} cannot advance'.format(abbrev))
             if self._promoted(abbrev) and not betza.can_retreat():
-                raise PiecesException('Promoted piece %s cannot retreat' %
-                        abbrev)
+                raise PiecesException('Promoted piece {} cannot retreat'
+                        .format(abbrev))
+
             abbrevs.add(abbrev)
 
         for abbrev in doc:
             if self._promoted(abbrev) and abbrev[1:] not in abbrevs:
-                raise PiecesException('Unpromoted version of %s missing' %
-                        abbrev)
+                raise PiecesException('Unpromoted version of {} missing'
+                        .format(abbrev))
 
     @staticmethod
     def _promoted(abbrev):
