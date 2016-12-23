@@ -19,7 +19,7 @@ class Position:
         self._num_ranks = len(ranks)
         if self._num_ranks < self.MIN_SIZE:
             raise ValueError('Too few ranks: {} < {}'.format(self._num_ranks,
-                self.MIN_SIZE))
+                    self.MIN_SIZE))
 
         self._num_files = 0
         self._num_royals = [0] * self.NUM_PLAYERS
@@ -28,7 +28,7 @@ class Position:
 
         if self._num_files < self.MIN_SIZE:
             raise ValueError('Too few files: {} < {}'.format(self._num_files,
-                self.MIN_SIZE))
+                    self.MIN_SIZE))
 
     @property
     def num_ranks(self):
