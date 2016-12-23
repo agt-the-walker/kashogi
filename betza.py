@@ -23,7 +23,7 @@ class Betza:
         return self._min_dy < 0
 
     def can_change_file(self):
-        return self._min_dx < 0 < self._max_dx
+        return self._min_dx < 0 or 0 < self._max_dx
 
     # i.e. no legal moves on subsequent turns if dropped or not promoted
     def num_restricted_furthest_ranks(self):

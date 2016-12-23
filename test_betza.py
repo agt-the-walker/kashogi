@@ -106,6 +106,12 @@ class BetzaTestCase(unittest.TestCase):
                 {(-1, 1): 1,            (1, 1): 0,
                              (0,-1): 0           })
 
+    def test_left_rook(self):
+        self.check('flbR',
+                {            (0, 1): 0,
+                 (-1, 0): 0,
+                             (0,-1): 0})
+
     def test_pawn(self):
         self.check('fW',
                 {(0, 1): 1},
@@ -120,6 +126,12 @@ class BetzaTestCase(unittest.TestCase):
         self.check('bRflBfrF',
                 {(-1, 1): 0,            (1, 1): 1,
                              (0,-1): 0           })
+
+    def test_right_rook(self):
+        self.check('frbR',
+                {(0, 1): 0,
+                            (1, 0): 0,
+                 (0,-1): 0           })
 
     def test_shogi_knight(self):
         self.check('ffN',
