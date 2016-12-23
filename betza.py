@@ -8,9 +8,13 @@ class Betza:
         if not tokens:
             raise ValueError('No token found')
 
-        self.directions = {}  # coordinate => best range
+        self._directions = {}  # coordinate => best range
         for token in tokens:
             self._parse(*token)
+
+    @property
+    def directions(self):
+        return self._directions
 
     def can_advance(self):
         return self.max_dy > 0
