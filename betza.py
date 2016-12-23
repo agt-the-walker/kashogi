@@ -17,17 +17,17 @@ class Betza:
         return self._directions
 
     def can_advance(self):
-        return self.max_dy > 0
+        return self._max_dy > 0
 
     def can_retreat(self):
-        return self.min_dy < 0
+        return self._min_dy < 0
 
     def can_change_file(self):
-        return self.min_dx < 0 < self.max_dx
+        return self._min_dx < 0 < self._max_dx
 
     # i.e. no legal moves on subsequent turns if dropped or not promoted
     def num_restricted_furthest_ranks(self):
-        return max(self.min_dy, 0)
+        return max(self._min_dy, 0)
 
     def _parse(self, modifiers, piece, range):
         if not range:
@@ -108,15 +108,15 @@ class Betza:
         else:
             self.directions[(dx, dy)] = range
 
-        if not hasattr(self, 'min_dx') or dx < self.min_dx:
-            self.min_dx = dx
-        if not hasattr(self, 'min_dy') or dy < self.min_dy:
-            self.min_dy = dy
+        if not hasattr(self, '_min_dx') or dx < self._min_dx:
+            self._min_dx = dx
+        if not hasattr(self, '_min_dy') or dy < self._min_dy:
+            self._min_dy = dy
 
-        if not hasattr(self, 'max_dx') or dx > self.max_dx:
-            self.max_dx = dx
-        if not hasattr(self, 'max_dy') or dy > self.max_dy:
-            self.max_dy = dy
+        if not hasattr(self, '_max_dx') or dx > self._max_dx:
+            self._max_dx = dx
+        if not hasattr(self, '_max_dy') or dy > self._max_dy:
+            self._max_dy = dy
 
     @staticmethod
     def _coordinates(m, n):
