@@ -15,6 +15,36 @@ class Position:
             raise ValueError('Invalid SFEN')
 
         ranks = m.group(1).split('/')
-        if len(ranks) < self.MIN_SIZE:
-            raise ValueError('Too few ranks: {} < {}'.format(len(ranks),
+        self._num_ranks = len(ranks)
+        if self._num_ranks < self.MIN_SIZE:
+            raise ValueError('Too few ranks: {} < {}'.format(self._num_ranks,
                 self.MIN_SIZE))
+
+        self._num_files = 0
+        for rank in ranks:
+            self._parse_rank(rank)
+
+        if self._num_files < self.MIN_SIZE:
+            raise ValueError('Too few files: {} < {}'.format(self._num_files,
+                self.MIN_SIZE))
+
+    @property
+    def num_ranks(self):
+        return self._num_ranks
+
+    @property
+    def num_files(self):
+        return self._num_files
+
+    def _parse_rank(self, rank):
+        tokens = re.findall("\+?[a-zA-Z](?:[a-zA-Z]@|')?|\d+", rank)
+        num_files = 0
+
+        for token in tokens:
+            if token.isdigit():
+                num_files += int(token)
+            else:
+                num_files += 1
+
+        if num_files > self._num_files:
+            self._num_files = num_files
