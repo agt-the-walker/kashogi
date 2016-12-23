@@ -19,6 +19,14 @@ class PositionTestCase(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Invalid piece in SFEN: Z'):
             Position('k1Z/3/2K b -')
 
+    def test_too_many_royals(self):
+        with self.assertRaisesRegex(ValueError,
+                'Too many royal pieces for white'):
+            Position('k1k/3/2K b -')
+        with self.assertRaisesRegex(ValueError,
+                'Too many royal pieces for black'):
+            Position('r2/3/K1K b -')
+
     def test_missing_plies_on_minishogi(self):
         self.check('rbsgk/4p/5/P4/KGSBR b -', 5, 5)
 

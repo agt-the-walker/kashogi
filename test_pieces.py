@@ -7,10 +7,14 @@ from pieces import PiecesException, Pieces
 class PiecesTestCase(unittest.TestCase):
     def test_normal_path(self):
         pieces = Pieces()
+
         self.assertTrue(pieces.exist('K'))
         self.assertTrue(pieces.exist("FF"))
         self.assertTrue(pieces.exist("+A'"))
         self.assertFalse(pieces.exist("FF@"))
+
+        self.assertTrue(pieces.is_royal('K'))
+        self.assertFalse(pieces.is_royal('N'))
 
     def test_invalid_abbreviation(self):
         with self.assertRaisesRegex(PiecesException,

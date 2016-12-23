@@ -6,6 +6,7 @@ from pieces import Pieces
 
 class Position:
     MIN_SIZE = 3
+    NUM_PLAYERS = 2
 
     def __init__(self, sfen):
         self._pieces = Pieces()
@@ -21,6 +22,7 @@ class Position:
                 self.MIN_SIZE))
 
         self._num_files = 0
+        self._num_royals = [0] * self.NUM_PLAYERS
         for rank in ranks:
             self._parse_rank(rank)
 
@@ -44,9 +46,21 @@ class Position:
             if token.isdigit():
                 num_files += int(token)
             else:
-                if not self._pieces.exist(token.upper()):
+                abbrev = token.upper()
+                if not self._pieces.exist(abbrev):
                     raise ValueError('Invalid piece in SFEN: {}'.format(token))
+
+                if self._pieces.is_royal(abbrev):
+                    player = 0 if abbrev == token else 1
+                    self._num_royals[player] += 1
+                    if self._num_royals[player] > 1:
+                        raise ValueError('Too many royal pieces for {}'
+                                .format(self._player_name(player)))
                 num_files += 1
 
         if num_files > self._num_files:
             self._num_files = num_files
+
+    def _player_name(self, player):
+        assert player < self.NUM_PLAYERS
+        return {0: 'black', 1: 'white'}[player]
