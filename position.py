@@ -28,7 +28,7 @@ class Position:
         self._hands = [defaultdict(int) for count in range(self.NUM_PLAYERS)]
         self._parse_hands(m.group(3))
 
-        self._current_player = m.group(2)
+        self._current_player = self._player_from_code(m.group(2))
         self._half_moves = int(m.group(4)) if m.group(4) else None
 
     @property
@@ -41,7 +41,7 @@ class Position:
 
     def __str__(self):
         sfen = ' '.join([self._sfen_board(),
-                        self._current_player,
+                        self._sfen_player(),
                         self._sfen_hands()])
         if self._half_moves:
             sfen += ' {}'.format(self._half_moves)
@@ -150,6 +150,9 @@ class Position:
 
         return '/'.join(ranks)
 
+    def _sfen_player(self):
+        return self._player_name(self._current_player)[0]
+
     def _sfen_hands(self):
         buffer = ''
 
@@ -179,6 +182,10 @@ class Position:
             buffer += piece
 
         return buffer
+
+    @staticmethod
+    def _player_from_code(code):
+        return {'b': 0, 'w': 1}[code]
 
     @staticmethod
     def _sfen_piece(token):
