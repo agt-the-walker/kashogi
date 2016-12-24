@@ -10,12 +10,13 @@ from utils import ordinal
 class Position:
     MIN_SIZE = 3
     NUM_PLAYERS = 2
+    STANDARD_HAND_ORDER = 'RBGSNLP'
     UNPROMOTED_PIECE_REGEX = "[a-zA-Z](?:[a-zA-Z](?=@)|')?"
 
     def __init__(self, sfen):
         self._pieces = Pieces()
 
-        m = re.match("(\S+) [wb] (\S+)( [1-9][0-9]*)?$", sfen)
+        m = re.match("(\S+) ([wb]) (\S+)( [1-9][0-9]*)?$", sfen)
         if not m:
             raise ValueError('Invalid SFEN')
 
@@ -32,6 +33,9 @@ class Position:
         self._num_per_file = [defaultdict(lambda: defaultdict(int))
                 for count in range(self.NUM_PLAYERS)]
 
+        # the following data structure is indexed by [rank][file]
+        self._board = defaultdict(lambda: {})
+
         for rank, s in enumerate(ranks):
             self._parse_rank(s, rank)
 
@@ -39,7 +43,13 @@ class Position:
             raise ValueError('Too few files: {} < {}'.format(self._num_files,
                     self.MIN_SIZE))
 
-        self._parse_hands(m.group(2))
+        # the following data structure is indexed by [player][abbrev]
+        self._hands = [defaultdict(int) for count in range(self.NUM_PLAYERS)]
+
+        self._parse_hands(m.group(3))
+
+        self._current_player = m.group(2)
+        self._half_moves = int(m.group(4)) if m.group(4) else None
 
     @property
     def num_ranks(self):
@@ -49,6 +59,14 @@ class Position:
     def num_files(self):
         return self._num_files
 
+    def __str__(self):
+        sfen = ' '.join([self._sfen_board(),
+                        self._current_player,
+                        self._sfen_hands()])
+        if self._half_moves:
+            sfen += ' {}'.format(self._half_moves)
+        return sfen
+
     def _parse_rank(self, s, rank):
         tokens = re.findall('\+?' + self.UNPROMOTED_PIECE_REGEX + '|\d+', s)
         file = 0
@@ -57,8 +75,8 @@ class Position:
             if token.isdigit():
                 file += int(token)
             else:
-                file += 1
                 self._parse_piece(token, rank, file)
+                file += 1
 
         if file > self._num_files:
             self._num_files = file
@@ -80,7 +98,7 @@ class Position:
             self._num_per_file[player][abbrev][file] += 1
             if self._num_per_file[player][abbrev][file] > max_per_file:
                 raise ValueError('Too many {} for {} on file {}'
-                        .format(abbrev, self._player_name(player), file))
+                        .format(abbrev, self._player_name(player), file + 1))
 
         num_restricted = self._pieces.num_restricted_furthest_ranks(abbrev)
         if num_restricted > 0:
@@ -92,6 +110,8 @@ class Position:
                         .format(abbrev, self._player_name(player),
                                 ordinal(nth_furthest_rank)))
 
+        self._board[rank][file] = token
+
     def _parse_hands(self, s):
         for number, token in re.findall('([1-9][0-9]*)?(' +
                 self.UNPROMOTED_PIECE_REGEX + ')', s):
@@ -101,6 +121,67 @@ class Position:
             if self._pieces.is_royal(abbrev):
                 raise ValueError('Royal piece in hand: {}'.format(token))
 
+            player = 0 if abbrev == token else 1
+            number = int(number) if number.isdigit() else 1
+            self._hands[player][abbrev] += number
+
     def _player_name(self, player):
         assert player < self.NUM_PLAYERS
         return {0: 'black', 1: 'white'}[player]
+
+    def _sfen_board(self):
+        ranks = []
+        for rank in range(self._num_ranks):
+            buffer = ''
+            skipped = 0
+            for file in range(self._num_files):
+                token = self._board[rank].get(file)
+                if token:
+                    if skipped > 0:
+                        buffer += str(skipped)
+                        skipped = 0
+                    buffer += self._sfen_piece(token)
+                else:
+                    skipped += 1
+            if skipped > 0:
+                buffer += str(skipped)
+            ranks.append(buffer)
+
+        return '/'.join(ranks)
+
+    def _sfen_hands(self):
+        buffer = ''
+
+        for player in range(self.NUM_PLAYERS):
+            # output standard shogi pieces in traditional order
+            for abbrev in self.STANDARD_HAND_ORDER:
+                buffer += self._sfen_piece_in_hand(player, abbrev)
+
+            # ...then output remaining pieces in alphabetical order
+            for abbrev in sorted(self._hands[player].keys() - \
+                    self.STANDARD_HAND_ORDER):
+                buffer += self._sfen_piece_in_hand(player, abbrev)
+
+        return buffer if buffer else '-'
+
+    def _sfen_piece_in_hand(self, player, abbrev):
+        number = self._hands[player][abbrev]
+
+        if number > 1:
+            buffer = str(number)
+        else:
+            buffer = ''
+        if number > 0:
+            piece = self._sfen_piece(abbrev)
+            if player == 1:
+                piece = piece.lower()
+            buffer += piece
+
+        return buffer
+
+    @staticmethod
+    def _sfen_piece(token):
+        if re.search('[a-zA-Z]{2}', token):
+            return token + '@'
+        else:
+            return token

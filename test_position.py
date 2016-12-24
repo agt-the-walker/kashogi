@@ -68,12 +68,17 @@ class PositionTestCase(unittest.TestCase):
             Position('k2/3/2K b Pp2k')
 
     def test_tori_wa_pieces_on_narrow_board(self):
-        self.check("k/p'p'sc@/p'1P'/P'P'SC@/K b -", 5, 3)
+        self.check("k/p'p'sc@/p'1P'/P'P'SC@/K b RFF@11SC@p1n'p'2rr@", 5, 3,
+                   "k2/p'p'sc@/p'1P'/P'P'SC@/K2 b RFF@11SC@pn'p'2rr@")
 
-    def check(self, sfen, expected_num_ranks, expected_num_files):
+    def check(self, sfen, expected_num_ranks, expected_num_files,
+              expected_sfen = None):
         position = Position(sfen)
         self.assertEqual(position.num_ranks, expected_num_ranks)
         self.assertEqual(position.num_files, expected_num_files)
+        if not expected_sfen:
+            expected_sfen = sfen
+        self.assertEqual(str(position), expected_sfen)
 
 
 if __name__ == '__main__':
