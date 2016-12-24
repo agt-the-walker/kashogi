@@ -21,6 +21,8 @@ class Position:
             raise ValueError('Invalid SFEN')
 
         # the following data structure is indexed by [rank][file]
+        # by convention, rank=0 and file=0 is bottom-left corner from black's
+        #  point of view
         self._board = defaultdict(lambda: {})
         self._parse_board(m.group(1))
 
@@ -111,7 +113,7 @@ class Position:
                         .format(abbrev, self._player_name(player),
                                 ordinal(nth_furthest_rank)))
 
-        self._board[rank][file] = token
+        self._board[self._num_ranks - rank - 1][file] = token
 
     def _parse_hands(self, s):
         for number, token in re.findall('([1-9][0-9]*)?(' +
@@ -132,7 +134,7 @@ class Position:
 
     def _sfen_board(self):
         ranks = []
-        for rank in range(self._num_ranks):
+        for rank in reversed(range(self._num_ranks)):
             buffer = ''
             skipped = 0
             for file in range(self._num_files):
