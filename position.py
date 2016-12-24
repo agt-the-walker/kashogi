@@ -10,11 +10,12 @@ from utils import ordinal
 class Position:
     MIN_SIZE = 3
     NUM_PLAYERS = 2
+    UNPROMOTED_PIECE_REGEX = "[a-zA-Z](?:[a-zA-Z](?=@)|')?"
 
     def __init__(self, sfen):
         self._pieces = Pieces()
 
-        m = re.match("(\S+) [wb] \S+( [1-9][0-9]*)?$", sfen)
+        m = re.match("(\S+) [wb] (\S+)( [1-9][0-9]*)?$", sfen)
         if not m:
             raise ValueError('Invalid SFEN')
 
@@ -38,6 +39,8 @@ class Position:
             raise ValueError('Too few files: {} < {}'.format(self._num_files,
                     self.MIN_SIZE))
 
+        self._parse_hands(m.group(2))
+
     @property
     def num_ranks(self):
         return self._num_ranks
@@ -47,7 +50,7 @@ class Position:
         return self._num_files
 
     def _parse_rank(self, s, rank):
-        tokens = re.findall("\+?[a-zA-Z](?:[a-zA-Z](?=@)|')?|\d+", s)
+        tokens = re.findall('\+?' + self.UNPROMOTED_PIECE_REGEX + '|\d+', s)
         file = 0
 
         for token in tokens:
@@ -63,7 +66,7 @@ class Position:
     def _parse_piece(self, token, rank, file):
         abbrev = token.upper()
         if not self._pieces.exist(abbrev):
-            raise ValueError('Invalid piece in SFEN: {}'.format(token))
+            raise ValueError('Invalid piece on board: {}'.format(token))
         player = 0 if abbrev == token else 1
 
         if self._pieces.is_royal(abbrev):
@@ -88,6 +91,15 @@ class Position:
                  raise ValueError('{} for {} found on {} furthest rank'
                         .format(abbrev, self._player_name(player),
                                 ordinal(nth_furthest_rank)))
+
+    def _parse_hands(self, s):
+        for number, token in re.findall('([1-9][0-9]*)?(' +
+                self.UNPROMOTED_PIECE_REGEX + ')', s):
+            abbrev = token.upper()
+            if not self._pieces.exist(abbrev):
+                raise ValueError('Invalid piece in hand: {}'.format(token))
+            if self._pieces.is_royal(abbrev):
+                raise ValueError('Royal piece in hand: {}'.format(token))
 
     def _player_name(self, player):
         assert player < self.NUM_PLAYERS

@@ -16,7 +16,7 @@ class PositionTestCase(unittest.TestCase):
             Position('k1/2/1K b -')
 
     def test_invalid_piece(self):
-        with self.assertRaisesRegex(ValueError, 'Invalid piece in SFEN: Z'):
+        with self.assertRaisesRegex(ValueError, 'Invalid piece on board: Z'):
             Position('k1Z/3/2K b -')
 
     def test_too_many_royals(self):
@@ -54,6 +54,18 @@ class PositionTestCase(unittest.TestCase):
     def test_wrong_plies(self):
         with self.assertRaisesRegex(ValueError, 'Invalid SFEN'):
             Position('rbsgk/4p/5/P4/KGSBR w - 0')
+
+    def test_invalid_piece_in_hand(self):
+        with self.assertRaisesRegex(ValueError, 'Invalid piece in hand: Z'):
+            Position('k2/3/2K b PZ')
+        with self.assertRaisesRegex(ValueError, 'Invalid piece in hand: z'):
+            Position('k2/3/2K b Pp2z')
+
+    def test_royal_piece_in_hand(self):
+        with self.assertRaisesRegex(ValueError, 'Royal piece in hand: K'):
+            Position('k2/3/2K b PK')
+        with self.assertRaisesRegex(ValueError, 'Royal piece in hand: k'):
+            Position('k2/3/2K b Pp2k')
 
     def test_tori_wa_pieces_on_narrow_board(self):
         self.check("k/p'p'sc@/p'1P'/P'P'SC@/K b -", 5, 3)
