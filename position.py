@@ -20,32 +20,12 @@ class Position:
         if not m:
             raise ValueError('Invalid SFEN')
 
-        ranks = m.group(1).split('/')
-        self._num_ranks = len(ranks)
-        if self._num_ranks < self.MIN_SIZE:
-            raise ValueError('Too few ranks: {} < {}'.format(self._num_ranks,
-                    self.MIN_SIZE))
-
-        self._num_files = 0
-        self._num_royals = [0] * self.NUM_PLAYERS
-
-        # the following data structure is indexed by [player][abbrev][file]
-        self._num_per_file = [defaultdict(lambda: defaultdict(int))
-                for count in range(self.NUM_PLAYERS)]
-
         # the following data structure is indexed by [rank][file]
         self._board = defaultdict(lambda: {})
-
-        for rank, s in enumerate(ranks):
-            self._parse_rank(s, rank)
-
-        if self._num_files < self.MIN_SIZE:
-            raise ValueError('Too few files: {} < {}'.format(self._num_files,
-                    self.MIN_SIZE))
+        self._parse_board(m.group(1))
 
         # the following data structure is indexed by [player][abbrev]
         self._hands = [defaultdict(int) for count in range(self.NUM_PLAYERS)]
-
         self._parse_hands(m.group(3))
 
         self._current_player = m.group(2)
@@ -66,6 +46,27 @@ class Position:
         if self._half_moves:
             sfen += ' {}'.format(self._half_moves)
         return sfen
+
+    def _parse_board(self, s):
+        ranks = s.split('/')
+        self._num_ranks = len(ranks)
+        if self._num_ranks < self.MIN_SIZE:
+            raise ValueError('Too few ranks: {} < {}'.format(self._num_ranks,
+                    self.MIN_SIZE))
+
+        self._num_files = 0
+        self._num_royals = [0] * self.NUM_PLAYERS
+
+        # the following data structure is indexed by [player][abbrev][file]
+        self._num_per_file = [defaultdict(lambda: defaultdict(int))
+                for count in range(self.NUM_PLAYERS)]
+
+        for rank, s in enumerate(ranks):
+            self._parse_rank(s, rank)
+
+        if self._num_files < self.MIN_SIZE:
+            raise ValueError('Too few files: {} < {}'.format(self._num_files,
+                    self.MIN_SIZE))
 
     def _parse_rank(self, s, rank):
         tokens = re.findall('\+?' + self.UNPROMOTED_PIECE_REGEX + '|\d+', s)
