@@ -30,7 +30,7 @@ class Position:
         self._hands = [defaultdict(int) for count in range(self.NUM_PLAYERS)]
         self._parse_hands(m.group(3))
 
-        self._current_player = self._player_from_code(m.group(2))
+        self._player_to_move = self._player_from_code(m.group(2))
         self._half_moves = int(m.group(4)) if m.group(4) else None
 
     @property
@@ -153,7 +153,7 @@ class Position:
         return '/'.join(ranks)
 
     def _sfen_player(self):
-        return self._player_name(self._current_player)[0]
+        return self._player_name(self._player_to_move)[0]
 
     def _sfen_hands(self):
         buffer = ''
