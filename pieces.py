@@ -60,6 +60,9 @@ class Pieces:
     def max_per_file(self, abbrev):
         return self._max_per_file.get(abbrev)
 
+    def directions(self, abbrev):
+        return self._betza[abbrev].directions
+
     def num_restricted_furthest_ranks(self, abbrev):
         return self._betza[abbrev].num_restricted_furthest_ranks()
 

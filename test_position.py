@@ -67,11 +67,52 @@ class PositionTestCase(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Royal piece in hand: k'):
             Position('k2/3/2K b Pp2k')
 
+    def test_in_check(self):
+        with self.assertRaisesRegex(ValueError,
+                'Opponent already in check by L'):
+            Position('k2/1p1/L2 b -')
+        with self.assertRaisesRegex(ValueError,
+                'Opponent already in check by R'):
+            Position('k2/1p1/R2 b -')
+        with self.assertRaisesRegex(ValueError,
+                'Opponent already in check by S'):
+            Position('k2/sp1/K2 w -')
+        self.check('k2/p2/R2 b -')   # found one of his pieces
+        self.check('k2/FC@2/R2 b -') # wrong orientation of closest piece
+        self.check('k2/1p1/B2 b -')  # wrong orientation
+        self.check('k2/1p1/G2 b -')  # out of range
+
+    def test_in_check_by_jumping_pieces(self):
+        with self.assertRaisesRegex(ValueError,
+                'Opponent already in check by N'):
+            self.check('n2/PPP/1K1 w -')
+        with self.assertRaisesRegex(ValueError,
+                'Opponent already in check by TF'):
+            self.check('tf@2/PPP/2K w -')
+
+    def test_in_check_by_cloud_eagle(self):
+        # since it has a limited range (3) diagonally forward
+        with self.assertRaisesRegex(ValueError,
+                'Opponent already in check by CE'):
+            Position('k4/5/5/3CE@1/5 b -')    # just in range
+        self.check('k4/5/5/5/4CE@ b -', 5, 5) # just out of range
+
+    def test_in_check_by_quails(self):
+        # since they are L-R asymmetrical
+        with self.assertRaisesRegex(ValueError,
+                "Opponent already in check by L'"):
+            Position("L'2/3/2k b -")
+        self.check("2L'/3/k2 b -")   # L-R swapped
+        with self.assertRaisesRegex(ValueError,
+                "Opponent already in check by R'"):
+            Position("2R'/3/k2 b -")
+        self.check("R'2/3/2k b -")   # L-R swapped
+
     def test_tori_wa_pieces_on_narrow_board(self):
         self.check("k/p'p'sc@/p'1P'/P'P'SC@/K b RFF@11SC@p1n'p'2rr@", 5, 3,
                    "k2/p'p'sc@/p'1P'/P'P'SC@/K2 b RFF@11SC@pn'p'2rr@")
 
-    def check(self, sfen, expected_num_ranks, expected_num_files,
+    def check(self, sfen, expected_num_ranks = 3, expected_num_files = 3,
               expected_sfen = None):
         position = Position(sfen)
         self.assertEqual(position.num_ranks, expected_num_ranks)

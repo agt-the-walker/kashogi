@@ -23,7 +23,7 @@ class Position:
         # the following data structure is indexed by [rank][file]
         # by convention, rank=0 and file=0 is bottom-left corner from black's
         #  point of view
-        self._board = defaultdict(lambda: {})
+        self._board = defaultdict(lambda: defaultdict(lambda: None))
         self._parse_board(m.group(1))
 
         # the following data structure is indexed by [player][abbrev]
@@ -31,6 +31,8 @@ class Position:
         self._parse_hands(m.group(3))
 
         self._player_to_move = self._player_from_code(m.group(2))
+        self._verify_opponent_not_in_check()
+
         self._half_moves = int(m.group(4)) if m.group(4) else None
 
     @property
@@ -56,8 +58,9 @@ class Position:
             raise ValueError('Too few ranks: {} < {}'.format(self._num_ranks,
                     self.MIN_SIZE))
 
+        self._all_coordinates = set()
         self._num_files = 0
-        self._num_royals = [0] * self.NUM_PLAYERS
+        self._pos_royals = [None] * self.NUM_PLAYERS
 
         # the following data structure is indexed by [player][abbrev][file]
         self._num_per_file = [defaultdict(lambda: defaultdict(int))
@@ -91,10 +94,10 @@ class Position:
         player = 0 if abbrev == token else 1
 
         if self._pieces.is_royal(abbrev):
-            self._num_royals[player] += 1
-            if self._num_royals[player] > 1:
+            if self._pos_royals[player]:
                 raise ValueError('Too many royal pieces for {}'
                         .format(self._player_name(player)))
+            self._pos_royals[player] = (file, self._num_ranks - rank - 1)
 
         max_per_file = self._pieces.max_per_file(abbrev)
         if max_per_file:
@@ -113,7 +116,48 @@ class Position:
                         .format(abbrev, self._player_name(player),
                                 ordinal(nth_furthest_rank)))
 
+        self._all_coordinates.update(self._pieces.directions(abbrev).keys())
         self._board[self._num_ranks - rank - 1][file] = token
+
+    def _verify_opponent_not_in_check(self):
+        opponent = self.NUM_PLAYERS - self._player_to_move - 1
+        pos_royal = self._pos_royals[opponent]
+        if not pos_royal:  # opponent has no royal piece
+            return
+
+        for coordinate in self._all_coordinates:
+            file, rank = pos_royal
+            dx, dy = coordinate
+            if self._player_to_move == 1:
+                dx, dy = -dx, -dy
+
+            range = 0
+            while True:
+                file -= dx
+                rank -= dy
+                if file < 0 or file >= self._num_files or \
+                   rank < 0 or rank >= self._num_ranks:
+                    break  # outside the board
+
+                range += 1
+
+                token = self._board[rank][file]
+                if not token:
+                    continue  # empty square
+
+                abbrev = token.upper()
+                piece_player = 0 if abbrev == token else 1
+                if piece_player == opponent:
+                    break  # found one of his pieces
+
+                piece_directions = self._pieces.directions(abbrev)
+                if not coordinate in piece_directions:
+                    break  # cannot check him (wrong orientation)
+
+                piece_range = piece_directions[coordinate]
+                if piece_range == 0 or piece_range >= range:
+                    raise ValueError('Opponent already in check by {}'
+                            .format(abbrev))  # my piece has enough range
 
     def _parse_hands(self, s):
         for number, token in re.findall('([1-9][0-9]*)?(' +
@@ -138,7 +182,7 @@ class Position:
             buffer = ''
             skipped = 0
             for file in range(self._num_files):
-                token = self._board[rank].get(file)
+                token = self._board[rank][file]
                 if token:
                     if skipped > 0:
                         buffer += str(skipped)
