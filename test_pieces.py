@@ -20,6 +20,8 @@ class PiecesTestCase(unittest.TestCase):
         self.assertEqual(pieces.max_per_file('P'), 1)
         self.assertEqual(pieces.max_per_file("S'"), 2)
 
+        self.assertEqual(pieces.num_restricted_furthest_ranks('N'), 2)
+
     def test_invalid_abbreviation(self):
         with self.assertRaisesRegex(PiecesException,
                 'Invalid piece abbreviation: Ph'):

@@ -60,6 +60,9 @@ class Pieces:
     def max_per_file(self, abbrev):
         return self._max_per_file.get(abbrev)
 
+    def num_restricted_furthest_ranks(self, abbrev):
+        return self._betza[abbrev].num_restricted_furthest_ranks()
+
     @staticmethod
     def _promoted(abbrev):
         return abbrev[0] == '+'

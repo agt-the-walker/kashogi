@@ -35,7 +35,18 @@ class PositionTestCase(unittest.TestCase):
                 "Too many S' for black on file 2"):
             Position("s'2/s'S'1/1S'1/1S'1 b -")
         # pawns and swallows don't share constraints though
-        self.check("2P/2S'/2S'/k2 b -", 4, 3)
+        self.check("2p/2s'/2s'/K2 b -", 4, 3)
+
+    def test_no_legal_moves_on_subsequent_turns(self):
+        with self.assertRaisesRegex(ValueError,
+                'L for black found on 1st furthest rank'):
+            Position('k1L/3/1K1 b -')
+        with self.assertRaisesRegex(ValueError,
+                'N for white found on 1st furthest rank'):
+            Position('k2/3/3/1Kn b -')
+        with self.assertRaisesRegex(ValueError,
+                'N for black found on 2nd furthest rank'):
+            Position('k2/1N1/3/1K1 b -')
 
     def test_missing_plies_on_minishogi(self):
         self.check('rbsgk/4p/5/P4/KGSBR b -', 5, 5)

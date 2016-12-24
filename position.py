@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import math
 import re
 
 from collections import defaultdict
@@ -29,12 +30,18 @@ class Position:
         self._num_per_file = [defaultdict(lambda: defaultdict(int))
                 for count in range(self.NUM_PLAYERS)]
 
-        for rank in ranks:
-            self._parse_rank(rank)
+        # the following data structure is indexed by [player][rank]
+        self._restricted_pieces_per_rank = [defaultdict(set)
+                for count in range(self.NUM_PLAYERS)]
+
+        for rank, s in enumerate(ranks):
+            self._parse_rank(s, rank)
 
         if self._num_files < self.MIN_SIZE:
             raise ValueError('Too few files: {} < {}'.format(self._num_files,
                     self.MIN_SIZE))
+
+        self._check_ranks()
 
     @property
     def num_ranks(self):
@@ -44,8 +51,8 @@ class Position:
     def num_files(self):
         return self._num_files
 
-    def _parse_rank(self, rank):
-        tokens = re.findall("\+?[a-zA-Z](?:[a-zA-Z](?=@)|')?|\d+", rank)
+    def _parse_rank(self, s, rank):
+        tokens = re.findall("\+?[a-zA-Z](?:[a-zA-Z](?=@)|')?|\d+", s)
         file = 0
 
         for token in tokens:
@@ -53,12 +60,12 @@ class Position:
                 file += int(token)
             else:
                 file += 1
-                self._parse_piece(token, file)
+                self._parse_piece(token, rank, file)
 
         if file > self._num_files:
             self._num_files = file
 
-    def _parse_piece(self, token, file):
+    def _parse_piece(self, token, rank, file):
         abbrev = token.upper()
         if not self._pieces.exist(abbrev):
             raise ValueError('Invalid piece in SFEN: {}'.format(token))
@@ -76,6 +83,28 @@ class Position:
             if self._num_per_file[player][abbrev][file] > max_per_file:
                 raise ValueError('Too many {} for {} on file {}'
                         .format(abbrev, self._player_name(player), file))
+
+        num_restricted = self._pieces.num_restricted_furthest_ranks(abbrev)
+        if num_restricted > 0:
+            self._restricted_pieces_per_rank[player][rank].add(abbrev)
+
+    def _check_ranks(self):
+        # thanks http://stackoverflow.com/a/20007730
+        ordinal = lambda n: "%d%s" % \
+                (n,"tsnrhtdd"[(math.floor(n/10)%10!=1)*(n%10<4)*n%10::4])
+
+        for player, data in enumerate(self._restricted_pieces_per_rank):
+            for rank, abbrevs in data.items():
+                nth_furthest_rank = {0: rank + 1, 1: self.num_ranks - rank
+                        }[player]
+                assert nth_furthest_rank > 0
+
+                for abbrev in abbrevs:
+                    if self._pieces.num_restricted_furthest_ranks(abbrev) >= \
+                            nth_furthest_rank:
+                        raise ValueError('{} for {} found on {} furthest rank'
+                                .format(abbrev, self._player_name(player),
+                                        ordinal(nth_furthest_rank)))
 
     def _player_name(self, player):
         assert player < self.NUM_PLAYERS
