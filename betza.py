@@ -100,13 +100,13 @@ class Betza:
                         self._add_directions(dx, dy, range)
 
     def _add_directions(self, dx, dy, range):
-        if (dx, dy) in self.directions:
+        if (dx, dy) in self._directions:
             # only upgrade range for the better
-            old_range = self.directions[(dx, dy)]
+            old_range = self._directions[(dx, dy)]
             if old_range != 0 and (range > old_range or range == 0):
-                self.directions[(dx, dy)] = range
+                self._directions[(dx, dy)] = range
         else:
-            self.directions[(dx, dy)] = range
+            self._directions[(dx, dy)] = range
 
         if not hasattr(self, '_min_dx') or dx < self._min_dx:
             self._min_dx = dx
