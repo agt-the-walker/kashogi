@@ -90,6 +90,11 @@ class PositionTestCase(unittest.TestCase):
         self.check('2r1k/B3p/P1gb1/G2s1/2K1R b S', 5, 5,
                    expected_status='checkmate')
 
+    def test_block_check_by_cloud_eagle(self):
+        # since it has a limited range (3) diagonally forward
+        self.check('ce@5/6/5K/6/1R3k w -', 5, 6, expected_status='checkmate')
+        self.check('6/1ce@4/5K/6/1R3k w -', 5, 6, expected_status='check')
+
     def test_elementary_stalemate(self):
         self.check("2k/3/KQ'1 w -", expected_status='stalemate')  # with queen
         self.check('2k/1r1/K2 b -', expected_status='stalemate')  # with rook
