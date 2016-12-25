@@ -20,10 +20,10 @@ class Position:
         if not m:
             raise ValueError('Invalid SFEN')
 
-        # the following data structure is indexed by [rank][file]
+        # the following data structure is indexed by [(file, rank)]
         # by convention, rank=0 and file=0 is bottom-left corner from black's
         #  point of view
-        self._board = defaultdict(lambda: defaultdict(lambda: None))
+        self._board = {}
         self._parse_board(m.group(1))
 
         # the following data structure is indexed by [player][abbrev]
@@ -127,7 +127,7 @@ class Position:
                                          ordinal(nth_furthest_rank)))
 
         self._all_coordinates.update(self._pieces.directions(abbrev).keys())
-        self._board[self._num_ranks - rank - 1][file] = token
+        self._board[(file, self._num_ranks - rank - 1)] = token
 
     def _verify_opponent_not_in_check(self):
         opponent = self.NUM_PLAYERS - self._player_to_move - 1
@@ -157,7 +157,7 @@ class Position:
 
                 range += 1
 
-                token = self._board[rank][file]
+                token = self._board.get((file, rank))
                 if not token:
                     continue  # empty square
 
@@ -177,29 +177,25 @@ class Position:
 
     def _legal_moves(self):
         # XXX: we don't handle drops for now
-        for rank in range(self._num_ranks):
-            for file in range(self._num_files):
-                token = self._board[rank][file]
-                if not token:
-                    continue  # empty square
+        for square in list(self._board):
+            token = self._board[square]
 
-                abbrev = token.upper()
-                piece_player = 0 if abbrev == token else 1
-                if piece_player != self._player_to_move:
-                    continue  # found one of his pieces
+            abbrev = token.upper()
+            piece_player = 0 if abbrev == token else 1
+            if piece_player != self._player_to_move:
+                continue  # found one of his pieces
 
-                for (dest_file, dest_rank) in \
-                        self._pseudo_legal_moves_from_square(rank, file):
-                    if self._is_legal_move(rank, file, dest_rank, dest_file):
-                        yield (dest_file, dest_rank)
+            for dest_square in self._pseudo_legal_moves_from_square(square):
+                if self._is_legal_move(square, dest_square):
+                    yield dest_square
 
-    def _pseudo_legal_moves_from_square(self, rank, file):
-        abbrev = self._board[rank][file].upper()
+    def _pseudo_legal_moves_from_square(self, square):
+        abbrev = self._board[square].upper()
         for coordinate, range in self._pieces.directions(abbrev).items():
             dx, dy = coordinate
             if self._player_to_move == 1:
                 dx, dy = -dx, -dy
-            dest_file, dest_rank = file, rank
+            (dest_file, dest_rank) = square
 
             while True:
                 dest_file += dx
@@ -208,7 +204,7 @@ class Position:
                    dest_rank < 0 or dest_rank >= self._num_ranks:
                     break  # outside the board
 
-                token = self._board[dest_rank][dest_file]
+                token = self._board.get((dest_file, dest_rank))
                 if token:
                     abbrev = token.upper()
                     piece_player = 0 if abbrev == token else 1
@@ -223,26 +219,26 @@ class Position:
                         break
                     range -= 1
 
-    def _is_legal_move(self, rank, file, dest_rank, dest_file):
+    def _is_legal_move(self, square, dest_square):
         pos_royal = self._pos_royals[self._player_to_move]
         if not pos_royal:  # player has no royal piece
             return True
 
-        if (file, rank) == pos_royal:
-            pos_royal = (dest_file, dest_rank)  # we have moved the royal piece
+        if square == pos_royal:
+            pos_royal = dest_square  # we have moved the royal piece
 
         # perform the move
-        saved_token = self._board[dest_rank][dest_file]
-        self._board[dest_rank][dest_file] = self._board[rank][file]
-        self._board[rank][file] = None
+        saved_token = self._board.get(dest_square)
+        self._board[dest_square] = self._board[square]
+        del self._board[square]
 
         result = True
         if self._piece_giving_check_to(self._player_to_move, pos_royal):
             result = False
 
         # revert the move to restore the board to its initial state
-        self._board[rank][file] = self._board[dest_rank][dest_file]
-        self._board[dest_rank][dest_file] = saved_token
+        self._board[square] = self._board[dest_square]
+        self._board[dest_square] = saved_token
 
         return result
 
@@ -269,7 +265,7 @@ class Position:
             buffer = ''
             skipped = 0
             for file in range(self._num_files):
-                token = self._board[rank][file]
+                token = self._board.get((file, rank))
                 if token:
                     if skipped > 0:
                         buffer += str(skipped)
