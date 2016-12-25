@@ -195,7 +195,7 @@ class Position:
             dx, dy = coordinate
             if self._player_to_move == 1:
                 dx, dy = -dx, -dy
-            (dest_file, dest_rank) = square
+            dest_file, dest_rank = square
 
             while True:
                 dest_file += dx
