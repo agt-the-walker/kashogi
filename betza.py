@@ -2,6 +2,7 @@
 
 import re
 
+
 class Betza:
     def __init__(self, notation):
         tokens = re.findall("([a-z]*)([A-Z])([1-9][0-9]*)?", notation)
@@ -61,7 +62,8 @@ class Betza:
             if m == 0:  # orthogonal
                 list_modifiers = re.findall("[bflr]", modifiers)
             else:       # diagonal/oblique
-                list_modifiers = [x[0] for x in
+                list_modifiers = [
+                        x[0] for x in
                         re.findall(r"(bl|br|fl|fr|([bflr])\2?)", modifiers)]
 
         for coordinate in self._coordinates(m, n):

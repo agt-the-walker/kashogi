@@ -4,6 +4,7 @@ import unittest
 
 from pieces import PiecesException, Pieces
 
+
 class PiecesTestCase(unittest.TestCase):
     def test_normal_path(self):
         pieces = Pieces()
@@ -25,7 +26,7 @@ class PiecesTestCase(unittest.TestCase):
 
     def test_invalid_abbreviation(self):
         with self.assertRaisesRegex(PiecesException,
-                'Invalid piece abbreviation: Ph'):
+                                    'Invalid piece abbreviation: Ph'):
             Pieces('support/invalid_abbreviation.yaml')
 
     def test_cannot_advance(self):
@@ -34,20 +35,20 @@ class PiecesTestCase(unittest.TestCase):
 
     def test_cannot_retreat(self):
         with self.assertRaisesRegex(PiecesException,
-                'Promoted piece \+P cannot retreat'):
+                                    'Promoted piece \+P cannot retreat'):
             Pieces('support/cannot_retreat_promoted.yaml')
         with self.assertRaisesRegex(PiecesException,
-                'Unpromotable piece L cannot retreat'):
+                                    'Unpromotable piece L cannot retreat'):
             Pieces('support/cannot_retreat_unpromotable.yaml')
 
     def test_cannot_unpromote(self):
         with self.assertRaisesRegex(PiecesException,
-                'Unpromoted version of \+P missing'):
+                                    'Unpromoted version of \+P missing'):
             Pieces('support/cannot_unpromote.yaml')
 
     def test_can_change_file(self):
         with self.assertRaisesRegex(PiecesException,
-                'Piece P can change files'):
+                                    'Piece P can change files'):
             Pieces('support/can_change_files.yaml')
 
 

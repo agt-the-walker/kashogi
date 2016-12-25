@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
-import math
 import re
 
 from collections import defaultdict
 from pieces import Pieces
 from utils import ordinal
+
 
 class Position:
     MIN_SIZE = 3
@@ -56,7 +56,7 @@ class Position:
         self._num_ranks = len(ranks)
         if self._num_ranks < self.MIN_SIZE:
             raise ValueError('Too few ranks: {} < {}'.format(self._num_ranks,
-                    self.MIN_SIZE))
+                             self.MIN_SIZE))
 
         self._all_coordinates = set()
         self._num_files = 0
@@ -64,14 +64,14 @@ class Position:
 
         # the following data structure is indexed by [player][abbrev][file]
         self._num_per_file = [defaultdict(lambda: defaultdict(int))
-                for count in range(self.NUM_PLAYERS)]
+                              for count in range(self.NUM_PLAYERS)]
 
         for rank, s in enumerate(ranks):
             self._parse_rank(s, rank)
 
         if self._num_files < self.MIN_SIZE:
             raise ValueError('Too few files: {} < {}'.format(self._num_files,
-                    self.MIN_SIZE))
+                             self.MIN_SIZE))
 
     def _parse_rank(self, s, rank):
         tokens = re.findall('\+?' + self.UNPROMOTED_PIECE_REGEX + '|\d+', s)
@@ -96,7 +96,7 @@ class Position:
         if self._pieces.is_royal(abbrev):
             if self._pos_royals[player]:
                 raise ValueError('Too many royal pieces for {}'
-                        .format(self._player_name(player)))
+                                 .format(self._player_name(player)))
             self._pos_royals[player] = (file, self._num_ranks - rank - 1)
 
         max_per_file = self._pieces.max_per_file(abbrev)
@@ -104,7 +104,8 @@ class Position:
             self._num_per_file[player][abbrev][file] += 1
             if self._num_per_file[player][abbrev][file] > max_per_file:
                 raise ValueError('Too many {} for {} on file {}'
-                        .format(abbrev, self._player_name(player), file + 1))
+                                 .format(abbrev, self._player_name(player),
+                                         file + 1))
 
         num_restricted = self._pieces.num_restricted_furthest_ranks(abbrev)
         if num_restricted > 0:
@@ -112,9 +113,9 @@ class Position:
             assert nth_furthest_rank > 0
 
             if num_restricted >= nth_furthest_rank:
-                 raise ValueError('{} for {} found on {} furthest rank'
-                        .format(abbrev, self._player_name(player),
-                                ordinal(nth_furthest_rank)))
+                raise ValueError('{} for {} found on {} furthest rank'
+                                 .format(abbrev, self._player_name(player),
+                                         ordinal(nth_furthest_rank)))
 
         self._all_coordinates.update(self._pieces.directions(abbrev).keys())
         self._board[self._num_ranks - rank - 1][file] = token
@@ -151,17 +152,18 @@ class Position:
                     break  # found one of his pieces
 
                 piece_directions = self._pieces.directions(abbrev)
-                if not coordinate in piece_directions:
+                if coordinate not in piece_directions:
                     break  # cannot check him (wrong orientation)
 
                 piece_range = piece_directions[coordinate]
                 if piece_range == 0 or piece_range >= range:
+                    # my piece has enough range to check him
                     raise ValueError('Opponent already in check by {}'
-                            .format(abbrev))  # my piece has enough range
+                                     .format(abbrev))
 
     def _parse_hands(self, s):
         for number, token in re.findall('([1-9][0-9]*)?(' +
-                self.UNPROMOTED_PIECE_REGEX + ')', s):
+                                        self.UNPROMOTED_PIECE_REGEX + ')', s):
             abbrev = token.upper()
             if not self._pieces.exist(abbrev):
                 raise ValueError('Invalid piece in hand: {}'.format(token))
@@ -208,8 +210,8 @@ class Position:
                 buffer += self._sfen_piece_in_hand(player, abbrev)
 
             # ...then output remaining pieces in alphabetical order
-            for abbrev in sorted(self._hands[player].keys() - \
-                    self.STANDARD_HAND_ORDER):
+            for abbrev in sorted(self._hands[player].keys() -
+                                 self.STANDARD_HAND_ORDER):
                 buffer += self._sfen_piece_in_hand(player, abbrev)
 
         return buffer if buffer else '-'

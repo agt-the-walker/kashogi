@@ -5,8 +5,10 @@ import yaml
 
 from betza import Betza
 
+
 class PiecesException(Exception):
     pass
+
 
 class Pieces:
     def __init__(self, filename='pieces.yaml'):
@@ -20,7 +22,7 @@ class Pieces:
         for abbrev, info in doc.items():
             if not re.match("\+?[A-Z]['A-Z]?$", abbrev):
                 raise PiecesException('Invalid piece abbreviation: {}'
-                        .format(abbrev))
+                                      .format(abbrev))
 
             self._betza[abbrev] = Betza(info['betza'])
             if 'flags' in info:
@@ -36,20 +38,20 @@ class Pieces:
                 raise PiecesException('Piece {} cannot advance'.format(abbrev))
             if self._promoted(abbrev) and not betza.can_retreat():
                 raise PiecesException('Promoted piece {} cannot retreat'
-                        .format(abbrev))
+                                      .format(abbrev))
 
             if self._promoted(abbrev):
                 if abbrev[1:] not in self._betza:
                     raise PiecesException('Unpromoted version of {} missing'
-                            .format(abbrev))
+                                          .format(abbrev))
             elif "+{}".format(abbrev) not in self._betza and \
                     not betza.can_retreat():
                 raise PiecesException('Unpromotable piece {} cannot retreat'
-                        .format(abbrev))
+                                      .format(abbrev))
 
             if betza.can_change_file() and abbrev in self._max_per_file:
                 raise PiecesException('Piece {} can change files'
-                        .format(abbrev))
+                                      .format(abbrev))
 
     def exist(self, abbrev):
         return abbrev in self._betza
