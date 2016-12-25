@@ -60,8 +60,8 @@ class Position:
             sfen += ' {}'.format(self._half_moves)
         return sfen
 
-    def _parse_board(self, s):
-        ranks = s.split('/')
+    def _parse_board(self, sfen_board):
+        ranks = sfen_board.split('/')
         self._num_ranks = len(ranks)
         if self._num_ranks < self.MIN_SIZE:
             raise ValueError('Too few ranks: {} < {}'.format(self._num_ranks,
@@ -75,15 +75,16 @@ class Position:
         self._num_per_file = [defaultdict(lambda: Counter())
                               for count in range(self.NUM_PLAYERS)]
 
-        for rank, s in enumerate(ranks):
-            self._parse_rank(s, rank)
+        for rank, sfen_rank in enumerate(ranks):
+            self._parse_rank(sfen_rank, rank)
 
         if self._num_files < self.MIN_SIZE:
             raise ValueError('Too few files: {} < {}'.format(self._num_files,
                              self.MIN_SIZE))
 
-    def _parse_rank(self, s, rank):
-        tokens = re.findall('\+?' + self.UNPROMOTED_PIECE_REGEX + '|\d+', s)
+    def _parse_rank(self, sfen_rank, rank):
+        tokens = re.findall('\+?' + self.UNPROMOTED_PIECE_REGEX + '|\d+',
+                            sfen_rank)
         file = 0
 
         for token in tokens:
@@ -242,9 +243,10 @@ class Position:
 
         return result
 
-    def _parse_hands(self, s):
+    def _parse_hands(self, sfen_hands):
         for number, token in re.findall('([1-9][0-9]*)?(' +
-                                        self.UNPROMOTED_PIECE_REGEX + ')', s):
+                                        self.UNPROMOTED_PIECE_REGEX + ')',
+                                        sfen_hands):
             abbrev = token.upper()
             if not self._pieces.exist(abbrev):
                 raise ValueError('Invalid piece in hand: {}'.format(token))
