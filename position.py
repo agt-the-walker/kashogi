@@ -2,7 +2,7 @@
 
 import re
 
-from collections import defaultdict
+from collections import defaultdict, Counter
 from pieces import Pieces
 from utils import ordinal
 
@@ -27,7 +27,7 @@ class Position:
         self._parse_board(m.group(1))
 
         # the following data structure is indexed by [player][abbrev]
-        self._hands = [defaultdict(int) for count in range(self.NUM_PLAYERS)]
+        self._hands = [Counter() for count in range(self.NUM_PLAYERS)]
         self._parse_hands(m.group(3))
 
         self._player_to_move = self._player_from_code(m.group(2))
@@ -63,7 +63,7 @@ class Position:
         self._pos_royals = [None] * self.NUM_PLAYERS
 
         # the following data structure is indexed by [player][abbrev][file]
-        self._num_per_file = [defaultdict(lambda: defaultdict(int))
+        self._num_per_file = [defaultdict(lambda: Counter())
                               for count in range(self.NUM_PLAYERS)]
 
         for rank, s in enumerate(ranks):
