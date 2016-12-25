@@ -33,6 +33,9 @@ class Pieces:
                     if m:
                         self._max_per_file[abbrev] = int(m.group(1))
 
+        self._check_consistency()
+
+    def _check_consistency(self):
         for abbrev, betza in self._betza.items():
             if not betza.can_advance():
                 raise PiecesException('Piece {} cannot advance'.format(abbrev))

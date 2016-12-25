@@ -79,27 +79,33 @@ class Betza:
                 else:
                     repeated = False
 
-                # diagonal/oblique
-                if modifier == 'bl' and dx < 0 and dy < 0:
-                    self._add_direction(dx, dy, range)
-                elif modifier == 'br' and dx > 0 and dy < 0:
-                    self._add_direction(dx, dy, range)
-                elif modifier == 'fl' and dx < 0 and dy > 0:
-                    self._add_direction(dx, dy, range)
-                elif modifier == 'fr' and dx > 0 and dy > 0:
+                if self._allowed_direction(dx, dy, modifier, repeated):
                     self._add_direction(dx, dy, range)
 
-                # all
-                if not(repeated) or abs(dx) < abs(dy):
-                    if modifier == 'b' and dy < 0:
-                        self._add_direction(dx, dy, range)
-                    elif modifier == 'f' and dy > 0:
-                        self._add_direction(dx, dy, range)
-                if not(repeated) or abs(dx) > abs(dy):
-                    if modifier == 'l' and dx < 0:
-                        self._add_direction(dx, dy, range)
-                    elif modifier == 'r' and dx > 0:
-                        self._add_direction(dx, dy, range)
+    def _allowed_direction(self, dx, dy, modifier, repeated):
+        # diagonal/oblique
+        if modifier == 'bl' and dx < 0 and dy < 0:
+            return True
+        elif modifier == 'br' and dx > 0 and dy < 0:
+            return True
+        elif modifier == 'fl' and dx < 0 and dy > 0:
+            return True
+        elif modifier == 'fr' and dx > 0 and dy > 0:
+            return True
+
+        # all
+        if not(repeated) or abs(dx) < abs(dy):
+            if modifier == 'b' and dy < 0:
+                return True
+            elif modifier == 'f' and dy > 0:
+                return True
+        if not(repeated) or abs(dx) > abs(dy):
+            if modifier == 'l' and dx < 0:
+                return True
+            elif modifier == 'r' and dx > 0:
+                return True
+
+        return False
 
     def _add_direction(self, dx, dy, range):
         if (dx, dy) in self._directions:
