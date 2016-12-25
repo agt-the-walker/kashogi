@@ -72,6 +72,9 @@ class PositionTestCase(unittest.TestCase):
     def test_in_check(self):
         self.check('k2/1p1/L2 w -', expected_is_check=True)
 
+    def test_in_double_check(self):
+        self.check('k2/1B1/3/L2 w -', 4, 3, expected_is_check=True)
+
     def test_adjacent_kings(self):
         with self.assertRaisesRegex(ValueError,
                                     'Opponent already in check by K'):
@@ -91,6 +94,11 @@ class PositionTestCase(unittest.TestCase):
         self.check('k2/FC@2/R2 b -')  # wrong orientation of closest piece
         self.check('k2/1p1/B2 b -')   # wrong orientation
         self.check('k2/1p1/G2 b -')   # out of range
+
+    def test_opponent_in_double_check(self):
+        with self.assertRaisesRegex(ValueError,
+                                    'Opponent already in check by [BL]'):
+            Position('k2/1B1/3/L2 b -')
 
     def test_opponent_in_check_by_jumping_pieces(self):
         with self.assertRaisesRegex(ValueError,
