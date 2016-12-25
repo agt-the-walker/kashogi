@@ -130,10 +130,10 @@ class PositionTestCase(unittest.TestCase):
     def test_opponent_in_check_by_jumping_pieces(self):
         with self.assertRaisesRegex(ValueError,
                                     'Opponent already in check by N'):
-            self.check('n2/PPP/1K1 w -')
+            Position('n2/PPP/1K1 w -')
         with self.assertRaisesRegex(ValueError,
                                     'Opponent already in check by TF'):
-            self.check('tf@2/PPP/2K w -')
+            Position('tf@2/PPP/2K w -')
 
     def test_opponent_in_check_by_cloud_eagle(self):
         # since it has a limited range (3) diagonally forward
