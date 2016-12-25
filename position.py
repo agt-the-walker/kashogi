@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import copy
 import re
 
 from collections import defaultdict, Counter
@@ -136,9 +135,7 @@ class Position:
         if piece:
             raise ValueError('Opponent already in check by {}'.format(piece))
 
-    def _piece_giving_check_to(self, player, board=None, pos_royal=None):
-        if not board:
-            board = self._board
+    def _piece_giving_check_to(self, player, pos_royal=None):
         if not pos_royal:  # argument not provided
             pos_royal = self._pos_royals[player]
         if not pos_royal:  # player has no royal piece
@@ -160,7 +157,7 @@ class Position:
 
                 range += 1
 
-                token = board[rank][file]
+                token = self._board[rank][file]
                 if not token:
                     continue  # empty square
 
@@ -234,13 +231,20 @@ class Position:
         if (file, rank) == pos_royal:
             pos_royal = (dest_file, dest_rank)  # we have moved the royal piece
 
-        board = copy.deepcopy(self._board)
-        board[dest_rank][dest_file] = board[rank][file]
-        board[rank][file] = None
-        if self._piece_giving_check_to(self._player_to_move, board, pos_royal):
-            return False
-        else:
-            return True
+        # perform the move
+        saved_token = self._board[dest_rank][dest_file]
+        self._board[dest_rank][dest_file] = self._board[rank][file]
+        self._board[rank][file] = None
+
+        result = True
+        if self._piece_giving_check_to(self._player_to_move, pos_royal):
+            result = False
+
+        # revert the move to restore the board to its initial state
+        self._board[rank][file] = self._board[dest_rank][dest_file]
+        self._board[dest_rank][dest_file] = saved_token
+
+        return result
 
     def _parse_hands(self, s):
         for number, token in re.findall('([1-9][0-9]*)?(' +
