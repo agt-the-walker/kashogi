@@ -69,7 +69,7 @@ class Position:
 
         self._all_coordinates = set()
         self._num_files = 0
-        self._pos_royals = [None] * self.NUM_PLAYERS
+        self._royal_squares = [None] * self.NUM_PLAYERS
 
         # the following data structure is indexed by [player][abbrev][file]
         self._num_per_file = [defaultdict(lambda: Counter())
@@ -103,10 +103,10 @@ class Position:
         player = 0 if abbrev == token else 1
 
         if self._pieces.is_royal(abbrev):
-            if self._pos_royals[player]:
+            if self._royal_squares[player]:
                 raise ValueError('Too many royal pieces for {}'
                                  .format(self._player_name(player)))
-            self._pos_royals[player] = (file, self._num_ranks - rank - 1)
+            self._royal_squares[player] = (file, self._num_ranks - rank - 1)
 
         max_per_file = self._pieces.max_per_file(abbrev)
         if max_per_file:
@@ -135,14 +135,14 @@ class Position:
         if piece:
             raise ValueError('Opponent already in check by {}'.format(piece))
 
-    def _piece_giving_check_to(self, player, pos_royal=None):
-        if not pos_royal:  # argument not provided
-            pos_royal = self._pos_royals[player]
-        if not pos_royal:  # player has no royal piece
+    def _piece_giving_check_to(self, player, royal_square=None):
+        if not royal_square:  # argument not provided
+            royal_square = self._royal_squares[player]
+        if not royal_square:  # player has no royal piece
             return
 
         for coordinate in self._all_coordinates:
-            file, rank = pos_royal
+            file, rank = royal_square
             dx, dy = coordinate
             if player == 0:
                 dx, dy = -dx, -dy
@@ -220,12 +220,12 @@ class Position:
                     range -= 1
 
     def _is_legal_move(self, square, dest_square):
-        pos_royal = self._pos_royals[self._player_to_move]
-        if not pos_royal:  # player has no royal piece
+        royal_square = self._royal_squares[self._player_to_move]
+        if not royal_square:  # player has no royal piece
             return True
 
-        if square == pos_royal:
-            pos_royal = dest_square  # we have moved the royal piece
+        if square == royal_square:
+            royal_square = dest_square  # we have moved the royal piece
 
         # perform the move
         saved_token = self._board.get(dest_square)
@@ -233,7 +233,7 @@ class Position:
         del self._board[square]
 
         result = True
-        if self._piece_giving_check_to(self._player_to_move, pos_royal):
+        if self._piece_giving_check_to(self._player_to_move, royal_square):
             result = False
 
         # revert the move to restore the board to its initial state
