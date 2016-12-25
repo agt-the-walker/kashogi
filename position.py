@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import copy
 import re
 
 from collections import defaultdict, Counter
@@ -44,8 +45,13 @@ class Position:
         return self._num_files
 
     def status(self):
-        piece = self._piece_giving_check_to(self._player_to_move)
-        return 'check' if piece else None
+        checking_piece = self._piece_giving_check_to(self._player_to_move)
+        try:
+            next(self._legal_moves())
+            if checking_piece:
+                return 'check'
+        except StopIteration:
+            return 'checkmate' if checking_piece else 'stalemate'
 
     def __str__(self):
         sfen = ' '.join([self._sfen_board(),
@@ -130,8 +136,11 @@ class Position:
         if piece:
             raise ValueError('Opponent already in check by {}'.format(piece))
 
-    def _piece_giving_check_to(self, player):
-        pos_royal = self._pos_royals[player]
+    def _piece_giving_check_to(self, player, board=None, pos_royal=None):
+        if not board:
+            board = self._board
+        if not pos_royal:  # argument not provided
+            pos_royal = self._pos_royals[player]
         if not pos_royal:  # player has no royal piece
             return
 
@@ -151,7 +160,7 @@ class Position:
 
                 range += 1
 
-                token = self._board[rank][file]
+                token = board[rank][file]
                 if not token:
                     continue  # empty square
 
@@ -168,6 +177,70 @@ class Position:
                 if piece_range == 0 or piece_range >= range:
                     # my piece has enough range to check him
                     return abbrev
+
+    def _legal_moves(self):
+        # XXX: we don't handle drops for now
+        for rank in range(self._num_ranks):
+            for file in range(self._num_files):
+                token = self._board[rank][file]
+                if not token:
+                    continue  # empty square
+
+                abbrev = token.upper()
+                piece_player = 0 if abbrev == token else 1
+                if piece_player != self._player_to_move:
+                    continue  # found one of his pieces
+
+                for (dest_file, dest_rank) in \
+                        self._pseudo_legal_moves_from_square(rank, file):
+                    if self._is_legal_move(rank, file, dest_rank, dest_file):
+                        yield (dest_file, dest_rank)
+
+    def _pseudo_legal_moves_from_square(self, rank, file):
+        abbrev = self._board[rank][file].upper()
+        for coordinate, range in self._pieces.directions(abbrev).items():
+            dx, dy = coordinate
+            if self._player_to_move == 1:
+                dx, dy = -dx, -dy
+            dest_file, dest_rank = file, rank
+
+            while True:
+                dest_file += dx
+                dest_rank += dy
+                if dest_file < 0 or dest_file >= self._num_files or \
+                   dest_rank < 0 or dest_rank >= self._num_ranks:
+                    break  # outside the board
+
+                token = self._board[dest_rank][dest_file]
+                if token:
+                    abbrev = token.upper()
+                    piece_player = 0 if abbrev == token else 1
+                    if piece_player == self._player_to_move:
+                        break  # found one of my pieces
+                    else:
+                        yield (dest_file, dest_rank)  # found one of his pieces
+                        break                         # we cannot go beyond it
+                else:
+                    yield (dest_file, dest_rank)  # found an empty square
+                    if range == 1:
+                        break
+                    range -= 1
+
+    def _is_legal_move(self, rank, file, dest_rank, dest_file):
+        pos_royal = self._pos_royals[self._player_to_move]
+        if not pos_royal:  # player has no royal piece
+            return True
+
+        if (file, rank) == pos_royal:
+            pos_royal = (dest_file, dest_rank)  # we have moved the royal piece
+
+        board = copy.deepcopy(self._board)
+        board[dest_rank][dest_file] = board[rank][file]
+        board[rank][file] = None
+        if self._piece_giving_check_to(self._player_to_move, board, pos_royal):
+            return False
+        else:
+            return True
 
     def _parse_hands(self, s):
         for number, token in re.findall('([1-9][0-9]*)?(' +

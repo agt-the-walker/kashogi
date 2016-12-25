@@ -75,6 +75,31 @@ class PositionTestCase(unittest.TestCase):
     def test_in_double_check(self):
         self.check('k2/1B1/3/L2 w -', 4, 3, expected_status='check')
 
+    def test_elementary_checkmate(self):
+        self.check('R1k/3/b1K w -', expected_status='checkmate')  # with rook
+        self.check('2k/1g1/2K b -', expected_status='checkmate')  # with gold
+
+    def test_real_checkmate(self):
+        # thanks http://brainking.com/en/ArchivedGame?g=3748461
+        self.check('1bb2/sG1R1/KP2G/P2S1/1r1k1 b -', 5, 5,
+                   expected_status='checkmate')
+        # thanks http://brainking.com/en/ArchivedGame?g=3748125
+        self.check('2rkB/BG3/2gs1/Pg3/K2PR b -', 5, 5,
+                   expected_status='checkmate')
+        # thanks http://brainking.com/en/ArchivedGame?g=3739393
+        self.check('2r1k/B3p/P1gb1/G2s1/2K1R b S', 5, 5,
+                   expected_status='checkmate')
+
+    def test_elementary_stalemate(self):
+        self.check("2k/3/KQ'1 w -", expected_status='stalemate')  # with queen
+        self.check('2k/1r1/K2 b -', expected_status='stalemate')  # with rook
+        self.check('3/kbK/3 b -', expected_status='stalemate')    # with bishop
+
+    def test_simple_stalemate(self):
+        # thanks https://en.wikipedia.org/wiki/Stalemate#Simple_examples
+        self.check('KB1r/4/1k2 b -', 3, 4, expected_status='stalemate')
+        self.check("2K/1Q'1/p2/k2 w -", 4, 3, expected_status='stalemate')
+
     def test_adjacent_kings(self):
         with self.assertRaisesRegex(ValueError,
                                     'Opponent already in check by K'):
@@ -90,6 +115,8 @@ class PositionTestCase(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,
                                     'Opponent already in check by S'):
             Position('k2/sp1/K2 w -')
+
+    def test_opponent_not_in_check(self):
         self.check('k2/p2/R2 b -')    # found one of his pieces
         self.check('k2/FC@2/R2 b -')  # wrong orientation of closest piece
         self.check('k2/1p1/B2 b -')   # wrong orientation
