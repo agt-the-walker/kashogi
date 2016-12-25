@@ -69,7 +69,7 @@ class Betza:
         for coordinate in self._coordinates(m, n):
             dx, dy = coordinate
             if not modifiers:
-                self._add_directions(dx, dy, range)
+                self._add_direction(dx, dy, range)
                 continue
 
             for modifier in list_modifiers:
@@ -81,27 +81,27 @@ class Betza:
 
                 # diagonal/oblique
                 if modifier == 'bl' and dx < 0 and dy < 0:
-                    self._add_directions(dx, dy, range)
+                    self._add_direction(dx, dy, range)
                 elif modifier == 'br' and dx > 0 and dy < 0:
-                    self._add_directions(dx, dy, range)
+                    self._add_direction(dx, dy, range)
                 elif modifier == 'fl' and dx < 0 and dy > 0:
-                    self._add_directions(dx, dy, range)
+                    self._add_direction(dx, dy, range)
                 elif modifier == 'fr' and dx > 0 and dy > 0:
-                    self._add_directions(dx, dy, range)
+                    self._add_direction(dx, dy, range)
 
                 # all
                 if not(repeated) or abs(dx) < abs(dy):
                     if modifier == 'b' and dy < 0:
-                        self._add_directions(dx, dy, range)
+                        self._add_direction(dx, dy, range)
                     elif modifier == 'f' and dy > 0:
-                        self._add_directions(dx, dy, range)
+                        self._add_direction(dx, dy, range)
                 if not(repeated) or abs(dx) > abs(dy):
                     if modifier == 'l' and dx < 0:
-                        self._add_directions(dx, dy, range)
+                        self._add_direction(dx, dy, range)
                     elif modifier == 'r' and dx > 0:
-                        self._add_directions(dx, dy, range)
+                        self._add_direction(dx, dy, range)
 
-    def _add_directions(self, dx, dy, range):
+    def _add_direction(self, dx, dy, range):
         if (dx, dy) in self._directions:
             # only upgrade range for the better
             old_range = self._directions[(dx, dy)]
