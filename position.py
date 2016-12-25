@@ -43,9 +43,9 @@ class Position:
     def num_files(self):
         return self._num_files
 
-    def is_check(self):
+    def status(self):
         piece = self._piece_giving_check_to(self._player_to_move)
-        return True if piece else False
+        return 'check' if piece else None
 
     def __str__(self):
         sfen = ' '.join([self._sfen_board(),

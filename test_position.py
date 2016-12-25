@@ -70,10 +70,10 @@ class PositionTestCase(unittest.TestCase):
             Position('k2/3/2K b Pp2k')
 
     def test_in_check(self):
-        self.check('k2/1p1/L2 w -', expected_is_check=True)
+        self.check('k2/1p1/L2 w -', expected_status='check')
 
     def test_in_double_check(self):
-        self.check('k2/1B1/3/L2 w -', 4, 3, expected_is_check=True)
+        self.check('k2/1B1/3/L2 w -', 4, 3, expected_status='check')
 
     def test_adjacent_kings(self):
         with self.assertRaisesRegex(ValueError,
@@ -129,17 +129,17 @@ class PositionTestCase(unittest.TestCase):
     def test_tori_wa_pieces_on_narrow_board(self):
         self.check("k/p'p'sc@/p'1P'/P'P'SC@/K b RFF@11SC@p1n'p'2rr@", 5, 3,
                    "k2/p'p'sc@/p'1P'/P'P'SC@/K2 b RFF@11SC@pn'p'2rr@",
-                   expected_is_check=True)
+                   expected_status='check')
 
     def check(self, sfen, expected_num_ranks=3, expected_num_files=3,
-              expected_sfen=None, expected_is_check=False):
+              expected_sfen=None, expected_status=None):
         position = Position(sfen)
         self.assertEqual(position.num_ranks, expected_num_ranks)
         self.assertEqual(position.num_files, expected_num_files)
         if not expected_sfen:
             expected_sfen = sfen
         self.assertEqual(str(position), expected_sfen)
-        self.assertEqual(position.is_check(), expected_is_check)
+        self.assertEqual(position.status(), expected_status)
 
 
 if __name__ == '__main__':
