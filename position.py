@@ -43,6 +43,10 @@ class Position:
     def num_files(self):
         return self._num_files
 
+    def is_check(self):
+        piece = self._piece_giving_check_to(self._player_to_move)
+        return True if piece else False
+
     def __str__(self):
         sfen = ' '.join([self._sfen_board(),
                         self._sfen_player(),
@@ -122,14 +126,19 @@ class Position:
 
     def _verify_opponent_not_in_check(self):
         opponent = self.NUM_PLAYERS - self._player_to_move - 1
-        pos_royal = self._pos_royals[opponent]
-        if not pos_royal:  # opponent has no royal piece
+        piece = self._piece_giving_check_to(opponent)
+        if piece:
+            raise ValueError('Opponent already in check by {}'.format(piece))
+
+    def _piece_giving_check_to(self, player):
+        pos_royal = self._pos_royals[player]
+        if not pos_royal:  # player has no royal piece
             return
 
         for coordinate in self._all_coordinates:
             file, rank = pos_royal
             dx, dy = coordinate
-            if self._player_to_move == 1:
+            if player == 0:
                 dx, dy = -dx, -dy
 
             range = 0
@@ -148,7 +157,7 @@ class Position:
 
                 abbrev = token.upper()
                 piece_player = 0 if abbrev == token else 1
-                if piece_player == opponent:
+                if piece_player == player:
                     break  # found one of his pieces
 
                 piece_directions = self._pieces.directions(abbrev)
@@ -158,8 +167,7 @@ class Position:
                 piece_range = piece_directions[coordinate]
                 if piece_range == 0 or piece_range >= range:
                     # my piece has enough range to check him
-                    raise ValueError('Opponent already in check by {}'
-                                     .format(abbrev))
+                    return abbrev
 
     def _parse_hands(self, s):
         for number, token in re.findall('([1-9][0-9]*)?(' +

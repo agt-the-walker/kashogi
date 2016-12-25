@@ -70,6 +70,14 @@ class PositionTestCase(unittest.TestCase):
             Position('k2/3/2K b Pp2k')
 
     def test_in_check(self):
+        self.check('k2/1p1/L2 w -', expected_is_check=True)
+
+    def test_adjacent_kings(self):
+        with self.assertRaisesRegex(ValueError,
+                                    'Opponent already in check by K'):
+            Position('k2/1K1/3 b -')
+
+    def test_opponent_in_check(self):
         with self.assertRaisesRegex(ValueError,
                                     'Opponent already in check by L'):
             Position('k2/1p1/L2 b -')
@@ -84,7 +92,7 @@ class PositionTestCase(unittest.TestCase):
         self.check('k2/1p1/B2 b -')   # wrong orientation
         self.check('k2/1p1/G2 b -')   # out of range
 
-    def test_in_check_by_jumping_pieces(self):
+    def test_opponent_in_check_by_jumping_pieces(self):
         with self.assertRaisesRegex(ValueError,
                                     'Opponent already in check by N'):
             self.check('n2/PPP/1K1 w -')
@@ -92,14 +100,14 @@ class PositionTestCase(unittest.TestCase):
                                     'Opponent already in check by TF'):
             self.check('tf@2/PPP/2K w -')
 
-    def test_in_check_by_cloud_eagle(self):
+    def test_opponent_in_check_by_cloud_eagle(self):
         # since it has a limited range (3) diagonally forward
         with self.assertRaisesRegex(ValueError,
                                     'Opponent already in check by CE'):
             Position('k4/5/5/3CE@1/5 b -')     # just in range
         self.check('k4/5/5/5/4CE@ b -', 5, 5)  # just out of range
 
-    def test_in_check_by_quails(self):
+    def test_opponent_in_check_by_quails(self):
         # since they are L-R asymmetrical
         with self.assertRaisesRegex(ValueError,
                                     "Opponent already in check by L'"):
@@ -112,16 +120,18 @@ class PositionTestCase(unittest.TestCase):
 
     def test_tori_wa_pieces_on_narrow_board(self):
         self.check("k/p'p'sc@/p'1P'/P'P'SC@/K b RFF@11SC@p1n'p'2rr@", 5, 3,
-                   "k2/p'p'sc@/p'1P'/P'P'SC@/K2 b RFF@11SC@pn'p'2rr@")
+                   "k2/p'p'sc@/p'1P'/P'P'SC@/K2 b RFF@11SC@pn'p'2rr@",
+                   expected_is_check=True)
 
     def check(self, sfen, expected_num_ranks=3, expected_num_files=3,
-              expected_sfen=None):
+              expected_sfen=None, expected_is_check=False):
         position = Position(sfen)
         self.assertEqual(position.num_ranks, expected_num_ranks)
         self.assertEqual(position.num_files, expected_num_files)
         if not expected_sfen:
             expected_sfen = sfen
         self.assertEqual(str(position), expected_sfen)
+        self.assertEqual(position.is_check(), expected_is_check)
 
 
 if __name__ == '__main__':
