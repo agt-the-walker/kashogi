@@ -15,7 +15,7 @@ class Position:
     def __init__(self, sfen):
         self._pieces = Pieces()
 
-        m = re.match("(\S+) ([wb]) (\S+)( [1-9][0-9]*)?$", sfen)
+        m = re.match("(\S+) ([wb]) (\S+)", sfen)
         if not m:
             raise ValueError('Invalid SFEN')
 
@@ -31,8 +31,6 @@ class Position:
 
         self._player_to_move = self._player_from_code(m.group(2))
         self._verify_opponent_not_in_check()
-
-        self._half_moves = int(m.group(4)) if m.group(4) else None
 
     @property
     def num_ranks(self):
@@ -52,12 +50,9 @@ class Position:
             return 'checkmate' if checking_piece else 'stalemate'
 
     def __str__(self):
-        sfen = ' '.join([self._sfen_board(),
+        return ' '.join([self._sfen_board(),
                         self._sfen_player(),
                         self._sfen_hands()])
-        if self._half_moves:
-            sfen += ' {}'.format(self._half_moves)
-        return sfen
 
     def _parse_board(self, sfen_board):
         ranks = sfen_board.split('/')
