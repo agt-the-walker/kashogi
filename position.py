@@ -177,16 +177,18 @@ class Position:
                     if piece_player != self._player_to_move:
                         continue  # found one of his pieces
 
-                    for dest_square in \
-                            self._pseudo_legal_moves_from_square(square):
-                        if self._is_legal_move_or_drop(square, dest_square):
-                            yield True
+                    yield from self._legal_moves_from_square(square)
 
                 elif self._has_pseudo_legal_drop(square):
                     if not in_check:
                         yield True  # always legal when not in check
                     elif self._is_legal_move_or_drop(None, square):
                         yield True  # drop blocks check
+
+    def _legal_moves_from_square(self, square):
+        for dest_square in self._pseudo_legal_moves_from_square(square):
+            if self._is_legal_move_or_drop(square, dest_square):
+                yield dest_square
 
     def _pseudo_legal_moves_from_square(self, square):
         abbrev = self._board[square].upper()
