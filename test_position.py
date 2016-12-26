@@ -41,13 +41,13 @@ class PositionTestCase(unittest.TestCase):
 
     def test_no_legal_moves_on_subsequent_turns(self):
         with self.assertRaisesRegex(ValueError,
-                                    'L for black found on 1st furthest rank'):
+                                    'L for black found on furthest rank'):
             Position('k1L/3/1K1 b -')
         with self.assertRaisesRegex(ValueError,
-                                    'N for white found on 1st furthest rank'):
+                                    'N for white found on furthest rank'):
             Position('k2/3/3/1Kn b -')
         with self.assertRaisesRegex(ValueError,
-                                    'N for black found on 2nd furthest rank'):
+                                    'N for black found on furthest rank'):
             Position('k2/1N1/3/1K1 b -')
 
     def test_missing_plies_on_minishogi(self):
@@ -79,6 +79,11 @@ class PositionTestCase(unittest.TestCase):
         self.check('R1k/3/b1K w -', expected_status='checkmate')  # with rook
         self.check('2k/1g1/2K b -', expected_status='checkmate')  # with gold
 
+    def test_elementary_checkmate_with_drops(self):
+        self.check('R1k/3/b1K w p', expected_status='check')        # drop ok
+        self.check('R1k/1p1/b1K w p', expected_status='checkmate')  # nifu
+        self.check('b1K/3/R1k w p', expected_status='checkmate')    # last rank
+
     def test_real_checkmate(self):
         # thanks http://brainking.com/en/ArchivedGame?g=3748461
         self.check('1bb2/sG1R1/KP2G/P2S1/1r1k1 b -', 5, 5,
@@ -104,6 +109,13 @@ class PositionTestCase(unittest.TestCase):
         # thanks https://en.wikipedia.org/wiki/Stalemate#Simple_examples
         self.check('KB1r/4/1k2 b -', 3, 4, expected_status='stalemate')
         self.check("2K/1Q'1/p2/k2 w -", 4, 3, expected_status='stalemate')
+
+    def test_empty_board(self):
+        self.check('3/3/3 b -', expected_status='stalemate')
+        self.check('3/3/3 b p', expected_status='stalemate')
+        self.check('3/3/3 b P')
+        self.check('3/3/3 w p')
+        self.check('3/3/3 w P', expected_status='stalemate')
 
     def test_adjacent_kings(self):
         with self.assertRaisesRegex(ValueError,

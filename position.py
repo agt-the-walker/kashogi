@@ -4,7 +4,6 @@ import re
 
 from collections import defaultdict, Counter
 from pieces import Pieces
-from utils import ordinal
 
 
 class Position:
@@ -46,7 +45,7 @@ class Position:
     def status(self):
         checking_piece = self._piece_giving_check_to(self._player_to_move)
         try:
-            next(self._legal_moves())
+            next(self._legal_moves(bool(checking_piece)))
             if checking_piece:
                 return 'check'
         except StopIteration:
@@ -75,8 +74,10 @@ class Position:
         self._num_per_file = [defaultdict(lambda: Counter())
                               for count in range(self.NUM_PLAYERS)]
 
-        for rank, sfen_rank in enumerate(ranks):
+        rank = self._num_ranks - 1
+        for sfen_rank in ranks:
             self._parse_rank(sfen_rank, rank)
+            rank -= 1
 
         if self._num_files < self.MIN_SIZE:
             raise ValueError('Too few files: {} < {}'.format(self._num_files,
@@ -107,7 +108,7 @@ class Position:
             if self._royal_squares[player]:
                 raise ValueError('Too many royal pieces for {}'
                                  .format(self._player_name(player)))
-            self._royal_squares[player] = (file, self._num_ranks - rank - 1)
+            self._royal_squares[player] = (file, rank)
 
         max_per_file = self._pieces.max_per_file(abbrev)
         if max_per_file:
@@ -117,18 +118,12 @@ class Position:
                                  .format(abbrev, self._player_name(player),
                                          file + 1))
 
-        num_restricted = self._pieces.num_restricted_furthest_ranks(abbrev)
-        if num_restricted > 0:
-            nth_furthest_rank = {0: rank + 1, 1: self.num_ranks - rank}[player]
-            assert nth_furthest_rank > 0
-
-            if num_restricted >= nth_furthest_rank:
-                raise ValueError('{} for {} found on {} furthest rank'
-                                 .format(abbrev, self._player_name(player),
-                                         ordinal(nth_furthest_rank)))
+        if not self._is_piece_allowed_on_rank(abbrev, player, rank):
+            raise ValueError('{} for {} found on furthest rank(s)'
+                             .format(abbrev, self._player_name(player)))
 
         self._all_coordinates.update(self._pieces.directions(abbrev).keys())
-        self._board[(file, self._num_ranks - rank - 1)] = piece
+        self._board[(file, rank)] = piece
 
     def _verify_opponent_not_in_check(self):
         opponent = self.NUM_PLAYERS - self._player_to_move - 1
@@ -176,19 +171,28 @@ class Position:
                     # my piece has enough range to check him
                     return abbrev
 
-    def _legal_moves(self):
-        # XXX: we don't handle drops for now
-        for square in list(self._board):
-            piece = self._board[square]
+    def _legal_moves(self, in_check):
+        for rank in range(self._num_ranks):
+            for file in range(self._num_files):
+                square = (file, rank)
+                piece = self._board.get(square)
 
-            abbrev = piece.upper()
-            piece_player = 0 if abbrev == piece else 1
-            if piece_player != self._player_to_move:
-                continue  # found one of his pieces
+                if piece:
+                    abbrev = piece.upper()
+                    piece_player = 0 if abbrev == piece else 1
+                    if piece_player != self._player_to_move:
+                        continue  # found one of his pieces
 
-            for dest_square in self._pseudo_legal_moves_from_square(square):
-                if self._is_legal_move(square, dest_square):
-                    yield dest_square
+                    for dest_square in \
+                            self._pseudo_legal_moves_from_square(square):
+                        if self._is_legal_move_or_drop(square, dest_square):
+                            yield True
+
+                elif self._has_pseudo_legal_drop(square):
+                    if not in_check:
+                        yield True  # always legal when not in check
+                    elif self._is_legal_move_or_drop(None, square):
+                        yield True  # drop blocks check
 
     def _pseudo_legal_moves_from_square(self, square):
         abbrev = self._board[square].upper()
@@ -220,25 +224,49 @@ class Position:
                         break
                     range -= 1
 
-    def _is_legal_move(self, square, dest_square):
-        royal_square = self._royal_squares[self._player_to_move]
+    def _has_pseudo_legal_drop(self, square):
+        file, rank = square
+        player = self._player_to_move
+
+        for abbrev in self._hands[player]:
+            max_per_file = self._pieces.max_per_file(abbrev)
+            if max_per_file and \
+               max_per_file == self._num_per_file[player][abbrev][file]:
+                continue  # Nifu and related restrictions
+
+            if not self._is_piece_allowed_on_rank(abbrev, player, rank):
+                continue  # rank restriction
+
+            return True
+
+        return False
+
+    def _is_legal_move_or_drop(self, square, dest_square):
+        player = self._player_to_move
+
+        royal_square = self._royal_squares[player]
         if not royal_square:  # player has no royal piece
             return True
 
         if square == royal_square:
             royal_square = dest_square  # we have moved the royal piece
 
-        # perform the move
+        # perform the move/drop
         saved_piece = self._board.get(dest_square)
-        self._board[dest_square] = self._board[square]
-        del self._board[square]
+        if square:
+            self._board[dest_square] = self._board[square]
+            del self._board[square]
+        else:
+            # doesn't matter which piece we drop...
+            self._board[dest_square] = 'X' if player == 0 else 'x'
 
         result = True
-        if self._piece_giving_check_to(self._player_to_move, royal_square):
+        if self._piece_giving_check_to(player, royal_square):
             result = False
 
-        # revert the move to restore the board to its initial state
-        self._board[square] = self._board[dest_square]
+        # revert the move/drop to restore the board to its initial state
+        if square:
+            self._board[square] = self._board[dest_square]
         self._board[dest_square] = saved_piece
 
         return result
@@ -256,6 +284,15 @@ class Position:
             player = 0 if abbrev == piece else 1
             number = int(number) if number.isdigit() else 1
             self._hands[player][abbrev] += number
+
+    def _is_piece_allowed_on_rank(self, abbrev, player, rank):
+        num_restricted = self._pieces.num_restricted_furthest_ranks(abbrev)
+        if not num_restricted:
+            return True
+
+        nth_furthest_rank = {0: self.num_ranks - rank, 1: rank + 1}[player]
+        assert nth_furthest_rank > 0
+        return num_restricted < nth_furthest_rank
 
     def _player_name(self, player):
         assert player < self.NUM_PLAYERS
