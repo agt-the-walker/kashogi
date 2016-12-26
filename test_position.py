@@ -79,10 +79,20 @@ class PositionTestCase(unittest.TestCase):
         self.check('R1k/3/b1K w -', expected_status='checkmate')  # with rook
         self.check('2k/1g1/2K b -', expected_status='checkmate')  # with gold
 
-    def test_elementary_checkmate_with_drops(self):
+    def test_elementary_checkmate_with_pawn_drops(self):
         self.check('R1k/3/b1K w p', expected_status='check')        # drop ok
         self.check('R1k/1p1/b1K w p', expected_status='checkmate')  # nifu
-        self.check('b1K/3/R1k w p', expected_status='checkmate')    # last rank
+        self.check('b1K/3/R1k w 12p', expected_status='checkmate')  # last rank
+
+    def test_elementary_checkmate_with_knight_drops(self):
+        # we cannot drop a shogi knight on our last two further ranks
+        self.check("3/GN'1/K1r/3/1k1 b N", 5, 3, expected_status='check')
+        self.check("GN'1/K1r/3/1k1 b N", 4, 3, expected_status='checkmate')
+
+    def test_elementary_checkmate_with_sparrow_drops(self):
+        # we can have two sparrows per file at most
+        self.check("R1k/1s'1/b1K/3 w s'", 4, 3, expected_status='check')
+        self.check("R1k/1s'1/bs'K/3 w s'", 4, 3, expected_status='checkmate')
 
     def test_real_checkmate(self):
         # thanks http://brainking.com/en/ArchivedGame?g=3748461
@@ -101,9 +111,9 @@ class PositionTestCase(unittest.TestCase):
         self.check('6/1ce@4/5K/6/1R3k w -', 5, 6, expected_status='check')
 
     def test_elementary_stalemate(self):
-        self.check("2k/3/KQ'1 w -", expected_status='stalemate')  # with queen
+        self.check("2k/3/KQ'1 w R", expected_status='stalemate')  # with queen
         self.check('2k/1r1/K2 b -', expected_status='stalemate')  # with rook
-        self.check('3/kbK/3 b -', expected_status='stalemate')    # with bishop
+        self.check('3/kbK/3 b snp', expected_status='stalemate')  # with bishop
 
     def test_simple_stalemate(self):
         # thanks https://en.wikipedia.org/wiki/Stalemate#Simple_examples
@@ -116,6 +126,10 @@ class PositionTestCase(unittest.TestCase):
         self.check('3/3/3 b P')
         self.check('3/3/3 w p')
         self.check('3/3/3 w P', expected_status='stalemate')
+
+    def test_blocked_board(self):
+        self.check('SSS/PPP/KNN b P', expected_status='stalemate')
+        self.check('SSS/PPP/KNN w p', expected_status='stalemate')
 
     def test_adjacent_kings(self):
         with self.assertRaisesRegex(ValueError,

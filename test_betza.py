@@ -80,6 +80,12 @@ class BetzaTestCase(unittest.TestCase):
                     (-1, -1): 1, (1, -1): 1,
                     (-1, -2): 1, (1, -2): 1})
 
+    def test_flying_cock(self):
+        self.check('fFrlW',
+                   {(-1,  1): 1, (1, 1): 1,
+                    (-1,  0): 1, (1, 0): 1},
+                   0, True, False)
+
     def test_heavenly_horse(self):
         self.check('ffbbN',
                    {(-1,  2): 1, (1,  2): 1,
