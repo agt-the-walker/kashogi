@@ -24,12 +24,13 @@ class Position:
         self._board = {}
         self._parse_board(m.group(1))
 
+        self._player_to_move = self._player_from_code(m.group(2))
+        self._verify_opponent_not_in_check()
+
         # the following data structure is indexed by [player][abbrev]
         self._hands = [Counter() for count in range(self.NUM_PLAYERS)]
         self._parse_hands(m.group(3))
 
-        self._player_to_move = self._player_from_code(m.group(2))
-        self._verify_opponent_not_in_check()
         self._checking_piece = \
             self._piece_giving_check_to(self._player_to_move)
 
