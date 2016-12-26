@@ -248,8 +248,8 @@ class Position:
             royal_square = dest_square  # we have moved the royal piece
 
         # perform the move/drop
-        saved_piece = self._board.get(dest_square)
         if square:
+            saved_piece = self._board.get(dest_square)
             self._board[dest_square] = self._board[square]
             del self._board[square]
         else:
@@ -263,7 +263,12 @@ class Position:
         # revert the move/drop to restore the board to its initial state
         if square:
             self._board[square] = self._board[dest_square]
-        self._board[dest_square] = saved_piece
+        if square and saved_piece:
+            self._board[dest_square] = saved_piece
+        else:
+            del self._board[dest_square]
+
+        assert(None not in self._board.values())
 
         return result
 
