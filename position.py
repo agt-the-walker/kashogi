@@ -3,7 +3,6 @@
 import re
 
 from collections import defaultdict, Counter
-from pieces import Pieces
 
 
 class Position:
@@ -12,8 +11,8 @@ class Position:
     STANDARD_HAND_ORDER = 'RBGSNLP'
     UNPROMOTED_PIECE_REGEX = "[a-zA-Z](?:[a-zA-Z](?=@)|')?"
 
-    def __init__(self, sfen):
-        self._pieces = Pieces()
+    def __init__(self, sfen, pieces):
+        self._pieces = pieces
 
         m = re.match("(\S+) ([wb]) (\S+)", sfen)
         if not m:
