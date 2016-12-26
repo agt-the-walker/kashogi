@@ -166,24 +166,18 @@ class Position:
                     return abbrev
 
     def _legal_moves(self, in_check):
-        for rank in range(self._num_ranks):
-            for file in range(self._num_files):
-                square = (file, rank)
-                piece = self._board.get(square)
+        for square in list(self._board):
+            piece = self._board[square]
 
-                if piece:
-                    abbrev = piece.upper()
-                    piece_player = 0 if abbrev == piece else 1
-                    if piece_player != self._player_to_move:
-                        continue  # found one of his pieces
+            abbrev = piece.upper()
+            piece_player = 0 if abbrev == piece else 1
+            if piece_player != self._player_to_move:
+                continue  # found one of his pieces
 
-                    yield from self._legal_moves_from_square(square)
+            yield from self._legal_moves_from_square(square)
 
-                elif self._has_pseudo_legal_drop(square):
-                    if not in_check:
-                        yield True  # always legal when not in check
-                    elif self._is_legal_move_or_drop(None, square):
-                        yield True  # drop blocks check
+        for abbrev in self._hands[self._player_to_move]:
+            yield from self._legal_drops_from_piece_in_hand(abbrev, in_check)
 
     def _legal_moves_from_square(self, square):
         for dest_square in self._pseudo_legal_moves_from_square(square):
@@ -220,22 +214,32 @@ class Position:
                         break
                     range -= 1
 
-    def _has_pseudo_legal_drop(self, square):
+    def _legal_drops_from_piece_in_hand(self, abbrev, in_check):
+        for rank in range(self._num_ranks):
+            for file in range(self._num_files):
+                square = (file, rank)
+                if self._board.get(square):
+                    continue  # not empty
+
+                if self._has_pseudo_legal_drop(abbrev, square):
+                    if not in_check:
+                        yield square  # always legal when not in check
+                    elif self._is_legal_move_or_drop(None, square):
+                        yield square  # drop blocks check
+
+    def _has_pseudo_legal_drop(self, abbrev, square):
         file, rank = square
         player = self._player_to_move
 
-        for abbrev in self._hands[player]:
-            max_per_file = self._pieces.max_per_file(abbrev)
-            if max_per_file and \
-               max_per_file == self._num_per_file[player][abbrev][file]:
-                continue  # Nifu and related restrictions
+        max_per_file = self._pieces.max_per_file(abbrev)
+        if max_per_file and \
+           max_per_file == self._num_per_file[player][abbrev][file]:
+            return False  # Nifu and related restrictions
 
-            if not self._is_piece_allowed_on_rank(abbrev, player, rank):
-                continue  # rank restriction
+        if not self._is_piece_allowed_on_rank(abbrev, player, rank):
+            return False  # rank restriction
 
-            return True
-
-        return False
+        return True
 
     def _is_legal_move_or_drop(self, square, dest_square):
         player = self._player_to_move
