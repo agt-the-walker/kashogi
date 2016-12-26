@@ -97,11 +97,11 @@ class Position:
         if file > self._num_files:
             self._num_files = file
 
-    def _parse_piece(self, token, rank, file):
-        abbrev = token.upper()
+    def _parse_piece(self, piece, rank, file):
+        abbrev = piece.upper()
         if not self._pieces.exist(abbrev):
-            raise ValueError('Invalid piece on board: {}'.format(token))
-        player = 0 if abbrev == token else 1
+            raise ValueError('Invalid piece on board: {}'.format(piece))
+        player = 0 if abbrev == piece else 1
 
         if self._pieces.is_royal(abbrev):
             if self._royal_squares[player]:
@@ -128,7 +128,7 @@ class Position:
                                          ordinal(nth_furthest_rank)))
 
         self._all_coordinates.update(self._pieces.directions(abbrev).keys())
-        self._board[(file, self._num_ranks - rank - 1)] = token
+        self._board[(file, self._num_ranks - rank - 1)] = piece
 
     def _verify_opponent_not_in_check(self):
         opponent = self.NUM_PLAYERS - self._player_to_move - 1
@@ -158,12 +158,12 @@ class Position:
 
                 range += 1
 
-                token = self._board.get((file, rank))
-                if not token:
+                piece = self._board.get((file, rank))
+                if not piece:
                     continue  # empty square
 
-                abbrev = token.upper()
-                piece_player = 0 if abbrev == token else 1
+                abbrev = piece.upper()
+                piece_player = 0 if abbrev == piece else 1
                 if piece_player == player:
                     break  # found one of his pieces
 
@@ -179,10 +179,10 @@ class Position:
     def _legal_moves(self):
         # XXX: we don't handle drops for now
         for square in list(self._board):
-            token = self._board[square]
+            piece = self._board[square]
 
-            abbrev = token.upper()
-            piece_player = 0 if abbrev == token else 1
+            abbrev = piece.upper()
+            piece_player = 0 if abbrev == piece else 1
             if piece_player != self._player_to_move:
                 continue  # found one of his pieces
 
@@ -205,10 +205,10 @@ class Position:
                    dest_rank < 0 or dest_rank >= self._num_ranks:
                     break  # outside the board
 
-                token = self._board.get((dest_file, dest_rank))
-                if token:
-                    abbrev = token.upper()
-                    piece_player = 0 if abbrev == token else 1
+                piece = self._board.get((dest_file, dest_rank))
+                if piece:
+                    abbrev = piece.upper()
+                    piece_player = 0 if abbrev == piece else 1
                     if piece_player == self._player_to_move:
                         break  # found one of my pieces
                     else:
@@ -229,7 +229,7 @@ class Position:
             royal_square = dest_square  # we have moved the royal piece
 
         # perform the move
-        saved_token = self._board.get(dest_square)
+        saved_piece = self._board.get(dest_square)
         self._board[dest_square] = self._board[square]
         del self._board[square]
 
@@ -239,21 +239,21 @@ class Position:
 
         # revert the move to restore the board to its initial state
         self._board[square] = self._board[dest_square]
-        self._board[dest_square] = saved_token
+        self._board[dest_square] = saved_piece
 
         return result
 
     def _parse_hands(self, sfen_hands):
-        for number, token in re.findall('([1-9][0-9]*)?(' +
+        for number, piece in re.findall('([1-9][0-9]*)?(' +
                                         self.UNPROMOTED_PIECE_REGEX + ')',
                                         sfen_hands):
-            abbrev = token.upper()
+            abbrev = piece.upper()
             if not self._pieces.exist(abbrev):
-                raise ValueError('Invalid piece in hand: {}'.format(token))
+                raise ValueError('Invalid piece in hand: {}'.format(piece))
             if self._pieces.is_royal(abbrev):
-                raise ValueError('Royal piece in hand: {}'.format(token))
+                raise ValueError('Royal piece in hand: {}'.format(piece))
 
-            player = 0 if abbrev == token else 1
+            player = 0 if abbrev == piece else 1
             number = int(number) if number.isdigit() else 1
             self._hands[player][abbrev] += number
 
@@ -267,12 +267,12 @@ class Position:
             buffer = ''
             skipped = 0
             for file in range(self._num_files):
-                token = self._board.get((file, rank))
-                if token:
+                piece = self._board.get((file, rank))
+                if piece:
                     if skipped > 0:
                         buffer += str(skipped)
                         skipped = 0
-                    buffer += self._sfen_piece(token)
+                    buffer += self._sfen_piece(piece)
                 else:
                     skipped += 1
             if skipped > 0:
@@ -319,8 +319,8 @@ class Position:
         return {'b': 0, 'w': 1}[code]
 
     @staticmethod
-    def _sfen_piece(token):
-        if re.search('[a-zA-Z]{2}', token):
-            return token + '@'
+    def _sfen_piece(piece):
+        if re.search('[a-zA-Z]{2}', piece):
+            return piece + '@'
         else:
-            return token
+            return piece
