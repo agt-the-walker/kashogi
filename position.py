@@ -30,6 +30,8 @@ class Position:
 
         self._player_to_move = self._player_from_code(m.group(2))
         self._verify_opponent_not_in_check()
+        self._checking_piece = \
+            self._piece_giving_check_to(self._player_to_move)
 
     @property
     def num_ranks(self):
@@ -40,13 +42,12 @@ class Position:
         return self._num_files
 
     def status(self):
-        checking_piece = self._piece_giving_check_to(self._player_to_move)
         try:
-            next(self._legal_moves(bool(checking_piece)))
-            if checking_piece:
+            next(self._legal_moves())
+            if self._checking_piece:
                 return 'check'
         except StopIteration:
-            return 'checkmate' if checking_piece else 'stalemate'
+            return 'checkmate' if self._checking_piece else 'stalemate'
 
     def __str__(self):
         return ' '.join([self._sfen_board(),
@@ -165,7 +166,7 @@ class Position:
                     # my piece has enough range to check him
                     return abbrev
 
-    def _legal_moves(self, in_check):
+    def _legal_moves(self):
         for square in list(self._board):
             piece = self._board[square]
 
@@ -174,12 +175,12 @@ class Position:
             if piece_player != self._player_to_move:
                 continue  # found one of his pieces
 
-            yield from self._legal_moves_from_square(square)
+            yield from self.legal_moves_from_square(square)
 
         for abbrev in self._hands[self._player_to_move]:
-            yield from self._legal_drops_from_piece_in_hand(abbrev, in_check)
+            yield from self.legal_drops_with_piece(abbrev)
 
-    def _legal_moves_from_square(self, square):
+    def legal_moves_from_square(self, square):
         for dest_square in self._pseudo_legal_moves_from_square(square):
             if self._is_legal_move_or_drop(square, dest_square):
                 yield dest_square
@@ -214,7 +215,7 @@ class Position:
                         break
                     range -= 1
 
-    def _legal_drops_from_piece_in_hand(self, abbrev, in_check):
+    def legal_drops_with_piece(self, abbrev):
         for rank in range(self._num_ranks):
             for file in range(self._num_files):
                 square = (file, rank)
@@ -222,7 +223,7 @@ class Position:
                     continue  # not empty
 
                 if self._has_pseudo_legal_drop(abbrev, square):
-                    if not in_check:
+                    if not self._checking_piece:
                         yield square  # always legal when not in check
                     elif self._is_legal_move_or_drop(None, square):
                         yield square  # drop blocks check
