@@ -19,12 +19,18 @@ class PositionTestCase(unittest.TestCase):
         position = self.check(sfen + ' 124', 9, 9, sfen)
 
         self.assertEqual(set(position.legal_moves_from_square((7, 4))),  # S7d
-                         set({(8, 3), (7, 5), (6, 5)}))
+                         set({(8, 3),
+                                      (7, 5), (6, 5)}))                  # noqa
+
         self.assertEqual(set(position.legal_drops_with_piece('P')),      # P*
-                         set({(7, 1), (7, 3), (7, 5),
-                              (4, 1), (4, 4), (4, 5), (4, 6), (4, 7), (4, 8),
-                              (3, 1), (3, 2), (3, 3), (3, 4), (3, 6), (3, 7),
-                              (3, 8)}))
+                         set({(7, 1), (4, 1), (3, 1),
+                                              (3, 2),
+                              (7, 3),         (3, 3),
+                                      (4, 4), (3, 4),                    # noqa
+                              (7, 5), (4, 5),
+                                      (4, 6), (3, 6),
+                                      (4, 7), (3, 7),
+                                      (4, 8), (3, 8)}))
 
     def test_tiny_board(self):
         with self.assertRaisesRegex(ValueError, 'Too few ranks: 2 <'):
