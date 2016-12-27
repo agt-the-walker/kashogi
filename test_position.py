@@ -22,6 +22,10 @@ class PositionTestCase(unittest.TestCase):
                          set({(8, 3),
                                       (7, 5), (6, 5)}))                  # noqa
 
+        self.assertEqual(set(position.legal_moves_from_square((5, 9))),  # +P5i
+                         set({        (5, 8),                            # noqa
+                              (6, 9),         (4, 9)}))
+
         self.assertEqual(set(position.legal_drops_with_piece('P')),      # P*
                          set({(7, 1), (4, 1), (3, 1),
                                               (3, 2),
