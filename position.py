@@ -185,7 +185,7 @@ class Position:
 
     def legal_moves_from_square(self, square):
         for dest_square in self._pseudo_legal_moves_from_square(square):
-            if self._is_legal_move_or_drop(square, dest_square):
+            if self._is_legal_move(square, dest_square):
                 yield dest_square
 
     def _pseudo_legal_moves_from_square(self, square):
@@ -225,10 +225,8 @@ class Position:
                 if self._board.get(square):
                     continue  # not empty
 
-                if self._has_pseudo_legal_drop(abbrev, square):
-                    if not self._checking_piece:
-                        yield square  # always legal when not in check
-                    elif self._is_legal_move_or_drop(None, square):
+                if self._has_pseudo_legal_drop(abbrev, square) and \
+                   self._is_legal_drop(abbrev, square):
                         yield square  # drop blocks check
 
     def _has_pseudo_legal_drop(self, abbrev, square):
@@ -245,7 +243,7 @@ class Position:
 
         return True
 
-    def _is_legal_move_or_drop(self, square, dest_square):
+    def _is_legal_move(self, square, dest_square):
         player = self._player_to_move
 
         royal_square = self._royal_squares[player]
@@ -255,26 +253,39 @@ class Position:
         if square == royal_square:
             royal_square = dest_square  # we have moved the royal piece
 
-        # perform the move/drop
-        if square:
-            saved_piece = self._board.get(dest_square)
-            self._board[dest_square] = self._board[square]
-            del self._board[square]
-        else:
-            # doesn't matter which piece we drop...
-            self._board[dest_square] = 'X' if player == 0 else 'x'
+        # perform the move
+        saved_piece = self._board.get(dest_square)
+        self._board[dest_square] = self._board[square]
+        del self._board[square]
 
         result = True
         if self._piece_giving_check_to(player, royal_square):
             result = False
 
-        # revert the move/drop to restore the board to its initial state
-        if square:
-            self._board[square] = self._board[dest_square]
-        if square and saved_piece:
+        # revert the move to restore the board to its initial state
+        self._board[square] = self._board[dest_square]
+        if saved_piece:
             self._board[dest_square] = saved_piece
         else:
             del self._board[dest_square]
+
+        assert(None not in self._board.values())
+
+        return result
+
+    def _is_legal_drop(self, abbrev, dest_square):
+        player = self._player_to_move
+
+        # perform the drop
+        self._board[dest_square] = abbrev if player == 0 else abbrev.lower()
+
+        # XXX: check that we don't run across no_drop_mate
+        result = True
+        if self._piece_giving_check_to(player):
+            result = False
+
+        # revert the drop restore the board to its initial state
+        del self._board[dest_square]
 
         assert(None not in self._board.values())
 
