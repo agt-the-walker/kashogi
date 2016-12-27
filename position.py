@@ -19,8 +19,8 @@ class Position:
             raise ValueError('Invalid SFEN')
 
         # the following data structure is indexed by [(file, rank)]
-        # by convention, rank=0 and file=0 is bottom-left corner from black's
-        #  point of view
+        # rank=1 and file=1 is top-right corner from black's point of view, for
+        #  consistency with Japanese notation
         self._board = {}
         self._parse_board(m.group(1))
 
@@ -70,16 +70,17 @@ class Position:
         self._num_per_file = [defaultdict(lambda: Counter())
                               for count in range(self.NUM_PLAYERS)]
 
-        rank = self._num_ranks - 1
-        for sfen_rank in ranks:
-            self._parse_rank(sfen_rank, rank)
-            rank -= 1
+        for rank, sfen_rank in enumerate(ranks, 1):
+            self._parse_rank(sfen_rank, rank, False)
 
         if self._num_files < self.MIN_SIZE:
             raise ValueError('Too few files: {} < {}'.format(self._num_files,
                              self.MIN_SIZE))
 
-    def _parse_rank(self, sfen_rank, rank):
+        for rank, sfen_rank in enumerate(ranks, 1):
+            self._parse_rank(sfen_rank, rank, True)
+
+    def _parse_rank(self, sfen_rank, rank, num_files_known):
         tokens = re.findall('\+?' + self.UNPROMOTED_PIECE_REGEX + '|\d+',
                             sfen_rank)
         file = 0
@@ -88,10 +89,11 @@ class Position:
             if token.isdigit():
                 file += int(token)
             else:
-                self._parse_piece(token, rank, file)
+                if num_files_known:
+                    self._parse_piece(token, rank, self._num_files - file)
                 file += 1
 
-        if file > self._num_files:
+        if not(num_files_known) and file > self._num_files:
             self._num_files = file
 
     def _parse_piece(self, piece, rank, file):
@@ -112,7 +114,7 @@ class Position:
             if self._num_per_file[player][abbrev][file] > max_per_file:
                 raise ValueError('Too many {} for {} on file {}'
                                  .format(abbrev, self._player_name(player),
-                                         file + 1))
+                                         file))
 
         if not self._is_piece_allowed_on_rank(abbrev, player, rank):
             raise ValueError('{} for {} found on furthest rank(s)'
@@ -136,15 +138,15 @@ class Position:
         for coordinate in self._all_coordinates:
             file, rank = royal_square
             dx, dy = coordinate
-            if player == 0:
+            if player == 1:
                 dx, dy = -dx, -dy
 
             range = 0
             while True:
                 file -= dx
                 rank -= dy
-                if file < 0 or file >= self._num_files or \
-                   rank < 0 or rank >= self._num_ranks:
+                if file < 1 or file > self._num_files or \
+                   rank < 1 or rank > self._num_ranks:
                     break  # outside the board
 
                 range += 1
@@ -190,15 +192,15 @@ class Position:
         abbrev = self._board[square].upper()
         for coordinate, range in self._pieces.directions(abbrev).items():
             dx, dy = coordinate
-            if self._player_to_move == 1:
+            if self._player_to_move == 0:
                 dx, dy = -dx, -dy
             dest_file, dest_rank = square
 
             while True:
                 dest_file += dx
                 dest_rank += dy
-                if dest_file < 0 or dest_file >= self._num_files or \
-                   dest_rank < 0 or dest_rank >= self._num_ranks:
+                if dest_file < 1 or dest_file > self._num_files or \
+                   dest_rank < 1 or dest_rank > self._num_ranks:
                     break  # outside the board
 
                 piece = self._board.get((dest_file, dest_rank))
@@ -217,8 +219,8 @@ class Position:
                     range -= 1
 
     def legal_drops_with_piece(self, abbrev):
-        for rank in range(self._num_ranks):
-            for file in range(self._num_files):
+        for rank in range(1, self._num_ranks+1):
+            for file in range(1, self._num_files+1):
                 square = (file, rank)
                 if self._board.get(square):
                     continue  # not empty
@@ -297,7 +299,7 @@ class Position:
         if not num_restricted:
             return True
 
-        nth_furthest_rank = {0: self.num_ranks - rank, 1: rank + 1}[player]
+        nth_furthest_rank = {0: rank, 1: self.num_ranks+1 - rank}[player]
         assert nth_furthest_rank > 0
         return num_restricted < nth_furthest_rank
 
@@ -307,10 +309,10 @@ class Position:
 
     def _sfen_board(self):
         ranks = []
-        for rank in reversed(range(self._num_ranks)):
+        for rank in range(1, self._num_ranks+1):
             buffer = ''
             skipped = 0
-            for file in range(self._num_files):
+            for file in reversed(range(1, self._num_files+1)):
                 piece = self._board.get((file, rank))
                 if piece:
                     if skipped > 0:

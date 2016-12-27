@@ -18,13 +18,13 @@ class PositionTestCase(unittest.TestCase):
         # we ignore move count, etc.
         position = self.check(sfen + ' 124', 9, 9, sfen)
 
-        self.assertEqual(set(position.legal_moves_from_square((2, 5))),  # S
-                         set({(1, 6), (2, 4), (3, 4)}))
+        self.assertEqual(set(position.legal_moves_from_square((7, 4))),  # S7d
+                         set({(8, 3), (7, 5), (6, 5)}))
         self.assertEqual(set(position.legal_drops_with_piece('P')),      # P*
-                         set({(2, 4), (2, 6), (2, 8),
-                              (5, 1), (5, 2), (5, 3), (5, 4), (5, 5), (5, 8),
-                              (6, 1), (6, 2), (6, 3), (6, 5), (6, 6), (6, 7),
-                              (6, 8)}))
+                         set({(7, 1), (7, 3), (7, 5),
+                              (4, 1), (4, 4), (4, 5), (4, 6), (4, 7), (4, 8),
+                              (3, 1), (3, 2), (3, 3), (3, 4), (3, 6), (3, 7),
+                              (3, 8)}))
 
     def test_tiny_board(self):
         with self.assertRaisesRegex(ValueError, 'Too few ranks: 2 <'):
@@ -46,7 +46,7 @@ class PositionTestCase(unittest.TestCase):
 
     def test_too_many_pawns_or_swallows_on_file(self):
         with self.assertRaisesRegex(ValueError,
-                                    'Too many P for white on file 3'):
+                                    'Too many P for white on file 1'):
             self.check('3/2p/2p/P1P b -')
         with self.assertRaisesRegex(ValueError,
                                     "Too many S' for black on file 2"):
@@ -106,7 +106,7 @@ class PositionTestCase(unittest.TestCase):
         position = self.check("3/GN'1/K1r/3/1k1 b N", 5, 3,
                               expected_status='check')
         self.assertEqual(set(position.legal_drops_with_piece('N')),
-                         set({(1, 2)}))
+                         set({(2, 3)}))
         self.check("GN'1/K1r/3/1k1 b N", 4, 3, expected_status='checkmate')
 
     def test_elementary_checkmate_with_sparrow_drops(self):
@@ -131,8 +131,8 @@ class PositionTestCase(unittest.TestCase):
 
         position = self.check('6/1ce@4/5K/6/2R2k w -', 5, 6,
                               expected_status='check')
-        self.assertEqual(set(position.legal_moves_from_square((1, 3))),  # CE
-                         set({(4, 0)}))
+        self.assertEqual(set(position.legal_moves_from_square((5, 2))),  # CE
+                         set({(2, 5)}))
 
     def test_elementary_stalemate(self):
         self.check("2k/3/KQ'1 w R", expected_status='stalemate')  # with queen
