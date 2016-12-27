@@ -52,7 +52,7 @@ class PositionTestCase(unittest.TestCase):
                                     "Too many S' for black on file 2"):
             self.check("s'2/s'S'1/1S'1/1S'1 b -")
         # pawns and swallows don't share constraints though
-        self.check("2p/2s'/2s'/K2 b -", 4, 3)
+        self.check("2p/2s'/2s'/K2 b -", 3, 4)
 
     def test_no_legal_moves_on_subsequent_turns(self):
         with self.assertRaisesRegex(ValueError,
@@ -90,7 +90,7 @@ class PositionTestCase(unittest.TestCase):
         self.check('k2/1p1/L2 w -', expected_status='check')
 
     def test_in_double_check(self):
-        self.check('k2/1B1/3/L2 w -', 4, 3, expected_status='check')
+        self.check('k2/1B1/3/L2 w -', 3, 4, expected_status='check')
 
     def test_elementary_checkmate(self):
         self.check('R1k/3/b1K w -', expected_status='checkmate')  # with rook
@@ -103,16 +103,16 @@ class PositionTestCase(unittest.TestCase):
 
     def test_elementary_checkmate_with_knight_drops(self):
         # we cannot drop a shogi knight on our last two further ranks
-        position = self.check("3/GN'1/K1r/3/1k1 b N", 5, 3,
+        position = self.check("3/GN'1/K1r/3/1k1 b N", 3, 5,
                               expected_status='check')
         self.assertEqual(set(position.legal_drops_with_piece('N')),
                          set({(2, 3)}))
-        self.check("GN'1/K1r/3/1k1 b N", 4, 3, expected_status='checkmate')
+        self.check("GN'1/K1r/3/1k1 b N", 3, 4, expected_status='checkmate')
 
     def test_elementary_checkmate_with_sparrow_drops(self):
         # we can have two sparrows per file at most
-        self.check("R1k/1s'1/b1K/3 w s'", 4, 3, expected_status='check')
-        self.check("R1k/1s'1/bs'K/3 w s'", 4, 3, expected_status='checkmate')
+        self.check("R1k/1s'1/b1K/3 w s'", 3, 4, expected_status='check')
+        self.check("R1k/1s'1/bs'K/3 w s'", 3, 4, expected_status='checkmate')
 
     def test_real_checkmate(self):
         # thanks http://brainking.com/en/ArchivedGame?g=3748461
@@ -127,9 +127,9 @@ class PositionTestCase(unittest.TestCase):
 
     def test_block_check_by_cloud_eagle(self):
         # since it has a limited range (3) diagonally forward
-        self.check('ce@5/6/5K/6/1R3k w -', 5, 6, expected_status='checkmate')
+        self.check('ce@5/6/5K/6/1R3k w -', 6, 5, expected_status='checkmate')
 
-        position = self.check('6/1ce@4/5K/6/2R2k w -', 5, 6,
+        position = self.check('6/1ce@4/5K/6/2R2k w -', 6, 5,
                               expected_status='check')
         self.assertEqual(set(position.legal_moves_from_square((5, 2))),  # CE
                          set({(2, 5)}))
@@ -141,8 +141,8 @@ class PositionTestCase(unittest.TestCase):
 
     def test_simple_stalemate(self):
         # thanks https://en.wikipedia.org/wiki/Stalemate#Simple_examples
-        self.check('KB1r/4/1k2 b -', 3, 4, expected_status='stalemate')
-        self.check("2K/1Q'1/p2/k2 w -", 4, 3, expected_status='stalemate')
+        self.check('KB1r/4/1k2 b -', 4, 3, expected_status='stalemate')
+        self.check("2K/1Q'1/p2/k2 w -", 3, 4, expected_status='stalemate')
 
     def test_empty_board(self):
         self.check('3/3/3 b -', expected_status='stalemate')
@@ -209,15 +209,15 @@ class PositionTestCase(unittest.TestCase):
         self.check("R'2/3/2k b -")   # L-R swapped
 
     def test_tori_wa_pieces_on_narrow_board(self):
-        self.check("k/p'p'sc@/p'1P'/P'P'SC@/K b RFF@11SC@p1n'p'2rr@", 5, 3,
+        self.check("k/p'p'sc@/p'1P'/P'P'SC@/K b RFF@11SC@p1n'p'2rr@", 3, 5,
                    "k2/p'p'sc@/p'1P'/P'P'SC@/K2 b RFF@11SC@pn'p'2rr@",
                    expected_status='check')
 
-    def check(self, sfen, expected_num_ranks=3, expected_num_files=3,
+    def check(self, sfen, expected_num_files=3, expected_num_ranks=3,
               expected_sfen=None, expected_status=None):
         position = Position(sfen, self._pieces)
-        self.assertEqual(position.num_ranks, expected_num_ranks)
         self.assertEqual(position.num_files, expected_num_files)
+        self.assertEqual(position.num_ranks, expected_num_ranks)
         if not expected_sfen:
             expected_sfen = sfen
         self.assertEqual(str(position), expected_sfen)
