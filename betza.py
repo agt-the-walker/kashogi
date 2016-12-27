@@ -10,12 +10,18 @@ class Betza:
             raise ValueError('No token found')
 
         self._directions = {}  # coordinate => best range
+        self._is_rider = False
+
         for token in tokens:
             self._parse(*token)
 
     @property
     def directions(self):
         return self._directions
+
+    @property
+    def is_rider(self):
+        return self._is_rider
 
     def can_advance(self):
         return self._max_dy > 0
@@ -33,9 +39,9 @@ class Betza:
     def _parse(self, modifiers, piece, range):
         if not range:
             if piece in ['B', 'Q', 'R']:
-                range = 0  # i.e. unlimited
+                range = 0  # i.e. unlimited rider
             else:
-                range = 1  # i.e. minimal
+                range = 1  # i.e. leaper
         else:
             range = int(range)
 
@@ -54,6 +60,9 @@ class Betza:
             self._add_movement(0, 1, modifiers, range)
         else:
             raise ValueError('Unknown piece: ' + piece)
+
+        if range != 1:
+            self._is_rider = True
 
     def _add_movement(self, m, n, modifiers, range):
         assert m <= n

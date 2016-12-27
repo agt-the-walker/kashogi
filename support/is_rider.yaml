@@ -1,0 +1,5 @@
+# (very) short rook
+SR:
+  betza: R2
+  flags:
+    - no_drop_mate

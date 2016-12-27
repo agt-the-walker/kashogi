@@ -17,6 +17,9 @@ class PiecesTestCase(unittest.TestCase):
         self.assertTrue(pieces.is_royal('K'))
         self.assertFalse(pieces.is_royal('N'))
 
+        self.assertTrue(pieces.no_drop_mate("S'"))
+        self.assertFalse(pieces.no_drop_mate('L'))
+
         self.assertIsNone(pieces.max_per_file('K'))
         self.assertEqual(pieces.max_per_file('P'), 1)
         self.assertEqual(pieces.max_per_file("S'"), 2)
@@ -50,6 +53,10 @@ class PiecesTestCase(unittest.TestCase):
         with self.assertRaisesRegex(PiecesException,
                                     'Piece P can change files'):
             Pieces('support/can_change_files.yaml')
+
+    def test_is_rider(self):
+        with self.assertRaisesRegex(PiecesException, 'Piece SR is a rider'):
+            Pieces('support/is_rider.yaml')
 
 
 if __name__ == '__main__':
