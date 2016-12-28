@@ -124,6 +124,33 @@ class PositionTestCase(unittest.TestCase):
         self.check("R1k/1s'1/b1K/3 w s'", 3, 4, expected_status='check')
         self.check("R1k/1s'1/bs'K/3 w s'", 3, 4, expected_status='checkmate')
 
+    def test_pawn_drop_cannot_checkmate_but_other_drops_can_checkmate(self):
+        position = self.check('2s/3/1NK w gl')
+        self.assertEqual(set(position.legal_drops_with_piece('P')),
+                         set({(3, 1), (2, 1),
+                              (3, 2), (2, 2)}))  # (1, 2) would give checkmate
+        self.assertEqual(set(position.legal_drops_with_piece('L')),
+                         set({(3, 1), (2, 1),
+                              (3, 2), (2, 2), (1, 2)}))  # (1, 2) checkmates
+
+    def test_pawn_drop_cannot_checkmate_even_when_in_check(self):
+        position = self.check('lkb+R/b3/K3 b P', 4, 3, expected_status='check')
+        self.assertEqual(set(position.legal_drops_with_piece('P')),
+                         set())  # (3, 2) would give checkmate
+
+    def test_pawn_drop_can_check(self):
+        position = self.check('1k1/3/K2 b P2s')
+        self.assertEqual(set(position.legal_drops_with_piece('P')),
+                         set({(3, 2), (2, 2), (1, 2),
+                                      (2, 3), (1, 3)}))
+
+    def test_pawn_drop_can_check_even_when_in_check(self):
+        # similar to test_pawn_drop_cannot_checkmate_even_when_in_check
+        #  except that opponent king has a flight square
+        position = self.check('1kb+R/b3/K3 b P', 4, 3, expected_status='check')
+        self.assertEqual(set(position.legal_drops_with_piece('P')),
+                         set({(3, 2)}))
+
     def test_real_checkmate(self):
         # thanks http://brainking.com/en/ArchivedGame?g=3748461
         self.check('1bb2/sG1R1/KP2G/P2S1/1r1k1 b -', 5, 5,

@@ -170,32 +170,35 @@ class Position:
             return 'checkmate' if self._checking_piece else 'stalemate'
 
     def _legal_moves_and_drops(self):
-        yield from self._legal_moves()
+        yield from self._legal_moves(self._player_to_move)
 
         for abbrev in self._hands[self._player_to_move]:
             yield from self.legal_drops_with_piece(abbrev)
 
-    def _legal_moves(self):
+    def _legal_moves(self, player):
         for square in list(self._board):
             piece = self._board[square]
 
             abbrev = piece.upper()
             piece_player = 0 if abbrev == piece else 1
-            if piece_player != self._player_to_move:
+            if piece_player != player:
                 continue  # found one of his pieces
 
-            yield from self.legal_moves_from_square(square)
+            yield from self.legal_moves_from_square(square, player)
 
-    def legal_moves_from_square(self, square):
-        for dest_square in self._pseudo_legal_moves_from_square(square):
-            if self._is_legal_move(square, dest_square):
+    def legal_moves_from_square(self, square, player=None):
+        if player is None:
+            player = self._player_to_move
+        for dest_square in \
+                self._pseudo_legal_moves_from_square(square, player):
+            if self._is_legal_move(square, dest_square, player):
                 yield dest_square
 
-    def _pseudo_legal_moves_from_square(self, square):
+    def _pseudo_legal_moves_from_square(self, square, player):
         abbrev = self._board[square].upper()
         for coordinate, range in self._pieces.directions(abbrev).items():
             dx, dy = coordinate
-            if self._player_to_move == 0:
+            if player == 0:
                 dx, dy = -dx, -dy
             dest_file, dest_rank = square
 
@@ -210,7 +213,7 @@ class Position:
                 if piece:
                     abbrev = piece.upper()
                     piece_player = 0 if abbrev == piece else 1
-                    if piece_player == self._player_to_move:
+                    if piece_player == player:
                         break  # found one of my pieces
                     else:
                         yield (dest_file, dest_rank)  # found one of his pieces
@@ -221,9 +224,7 @@ class Position:
                         break
                     range -= 1
 
-    def _is_legal_move(self, square, dest_square):
-        player = self._player_to_move
-
+    def _is_legal_move(self, square, dest_square, player):
         royal_square = self._royal_squares[player]
         if not royal_square:  # player has no royal piece
             return True
@@ -282,10 +283,12 @@ class Position:
         # perform the drop
         self._board[dest_square] = abbrev if player == 0 else abbrev.lower()
 
-        # XXX: check that we don't run across no_drop_mate
         result = True
         if self._piece_giving_check_to(player):
-            result = False
+            result = False  # currently in check and drop didn't block it
+        elif (self._pieces.no_drop_mate(abbrev) and
+              self._is_opponent_checkmated()):
+            result = False  # cannot checkmate opponent with drop
 
         # revert the drop restore the board to its initial state
         del self._board[dest_square]
@@ -293,6 +296,17 @@ class Position:
         assert(None not in self._board.values())
 
         return result
+
+    def _is_opponent_checkmated(self):
+        opponent = self.NUM_PLAYERS - self._player_to_move - 1
+        if not self._piece_giving_check_to(opponent):
+            return False
+
+        try:
+            next(self._legal_moves(opponent))
+            return False
+        except StopIteration:
+            return True
 
     def _parse_hands(self, sfen_hands):
         for number, piece in re.findall('([1-9][0-9]*)?(' +
