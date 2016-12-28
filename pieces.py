@@ -42,23 +42,24 @@ class Pieces:
         for abbrev, betza in self._betza.items():
             if not betza.can_advance():
                 raise PiecesException('Piece {} cannot advance'.format(abbrev))
-            if self.is_promoted(abbrev) and not betza.can_retreat():
-                raise PiecesException('Promoted piece {} cannot retreat'
-                                      .format(abbrev))
 
-            if self.is_promoted(abbrev):
-                if self.unpromoted(abbrev) not in self._betza:
+            elif self.is_promoted(abbrev):
+                if not betza.can_retreat():
+                    raise PiecesException('Promoted piece {} cannot retreat'
+                                          .format(abbrev))
+                elif self.unpromoted(abbrev) not in self._betza:
                     raise PiecesException('Unpromoted version of {} missing'
                                           .format(abbrev))
+
             elif not self.can_promote(abbrev) and not betza.can_retreat():
                 raise PiecesException('Unpromotable piece {} cannot retreat'
                                       .format(abbrev))
 
-            if betza.can_change_file() and abbrev in self._max_per_file:
+            elif betza.can_change_file() and abbrev in self._max_per_file:
                 raise PiecesException('Piece {} can change files'
                                       .format(abbrev))
 
-            if betza.is_rider and abbrev in self._no_drop_mate:
+            elif betza.is_rider and self.no_drop_mate(abbrev):
                 raise PiecesException('Piece {} is a rider'.format(abbrev))
 
     def exist(self, abbrev):
