@@ -189,6 +189,16 @@ class Position:
     def legal_moves_from_square(self, square, player=None):
         if player is None:
             player = self._player_to_move
+
+        piece = self._board.get(square)
+        if piece:
+            abbrev = piece.upper()
+            piece_player = 0 if abbrev == piece else 1
+            if piece_player != player:
+                raise ValueError('Square {} is not ours'.format(square))
+        else:
+            raise ValueError('Square {} is empty'.format(square))
+
         for dest_square in \
                 self._pseudo_legal_moves_from_square(square, player):
             if self._is_legal_move(square, dest_square, player):
@@ -253,6 +263,9 @@ class Position:
         return result
 
     def legal_drops_with_piece(self, abbrev):
+        if not self._hands[self._player_to_move].get(abbrev):
+            raise ValueError('Piece {} is not in hand'.format(abbrev))
+
         for rank in range(1, self._num_ranks+1):
             for file in range(1, self._num_files+1):
                 square = (file, rank)

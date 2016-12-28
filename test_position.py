@@ -18,6 +18,14 @@ class PositionTestCase(unittest.TestCase):
         # we ignore move count, etc.
         position = self.check(sfen + ' 124', 9, 9, sfen)
 
+        with self.assertRaisesRegex(ValueError, 'Square \(9, 2\) is empty'):
+            next(position.legal_moves_from_square((9, 2)))
+        with self.assertRaisesRegex(ValueError, 'Square \(7, 2\) is not ours'):
+            next(position.legal_moves_from_square((7, 2)))
+
+        with self.assertRaisesRegex(ValueError, 'Piece S is not in hand'):
+            next(position.legal_drops_with_piece('S'))
+
         self.assertEqual(set(position.legal_moves_from_square((7, 4))),  # S7d
                          set({(8, 3),
                                       (7, 5), (6, 5)}))                  # noqa
@@ -125,7 +133,7 @@ class PositionTestCase(unittest.TestCase):
         self.check("R1k/1s'1/bs'K/3 w s'", 3, 4, expected_status='checkmate')
 
     def test_pawn_drop_cannot_checkmate_but_other_drops_can_checkmate(self):
-        position = self.check('2s/3/1NK w gl')
+        position = self.check('2s/3/1NK w lp')
         self.assertEqual(set(position.legal_drops_with_piece('P')),
                          set({(3, 1), (2, 1),
                               (3, 2), (2, 2)}))  # (1, 2) would give checkmate
