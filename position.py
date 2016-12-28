@@ -314,6 +314,26 @@ class Position:
         else:
             return [False]
 
+    def drop(self, abbrev, dest_square):
+        if dest_square not in self.legal_drops_with_piece(abbrev):
+            raise ValueError('Illegal drop')
+
+        player = self._player_to_move
+
+        # perform the drop
+        self._board[dest_square] = abbrev if player == 0 else abbrev.lower()
+        self._hands[player][abbrev] -= 1
+        if self._hands[player][abbrev] == 0:
+            del self._hands[player][abbrev]
+
+        # update statistics
+        max_per_file = self._pieces.max_per_file(abbrev)
+        if max_per_file:
+            file, _ = dest_square
+            self._num_per_file[player][abbrev][file] += 1
+
+        self._end_turn()
+
     def legal_drops_with_piece(self, abbrev):
         if not self._hands[self._player_to_move].get(abbrev):
             raise ValueError('Piece {} is not in hand'.format(abbrev))
@@ -372,6 +392,12 @@ class Position:
             return False
         except StopIteration:
             return True
+
+    def _end_turn(self):
+        self._player_to_move = self.NUM_PLAYERS - self._player_to_move - 1
+
+        self._checking_piece = \
+            self._piece_giving_check_to(self._player_to_move)
 
     def _is_piece_allowed_on_rank(self, abbrev, player, rank):
         num_restricted = self._pieces.num_restricted_furthest_ranks(abbrev)

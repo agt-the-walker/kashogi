@@ -312,6 +312,24 @@ class PositionTestCase(unittest.TestCase):
         # moves out of promotion zone (R)
         self.assertEqual(position.promotions((3, 7), (3, 6)), [False, True])
 
+    def test_pawn_drops(self):
+        position = self.check('2k/3/K2 b 2Pp')
+        position.drop('P', (1, 3))
+        self.assertEqual(str(position), '2k/3/K1P w Pp')
+        position.drop('P', (2, 2))
+        self.assertEqual(str(position), '2k/1p1/K1P b P')
+
+        with self.assertRaisesRegex(ValueError, 'Illegal drop'):
+            position.drop('P', (1, 2))  # nifu (due to previous drop)
+        position.drop('P', (2, 3))
+        self.assertEqual(str(position), '2k/1p1/KPP w -')
+
+    def test_other_drop(self):
+        position = self.check('2k/3/K2 w 3s')
+        position.drop('S', (2, 2))
+        self.assertEqual(str(position), '2k/1s1/K2 b 2s')
+        self.assertEqual(position.status(), 'check')
+
     def check(self, sfen, expected_num_files=3, expected_num_ranks=3,
               expected_sfen=None, expected_status=None):
         position = Position(sfen, self._pieces)
