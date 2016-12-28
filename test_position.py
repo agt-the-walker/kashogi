@@ -20,6 +20,7 @@ class PositionTestCase(unittest.TestCase):
         self.assertEqual(position.player_to_move, 1)
         self.assertEqual(position.get((2, 8)), '+r')
         self.assertEqual(position.in_hand(1), {'B': 1, 'G': 1, 'N': 1, 'P': 3})
+        self.assertEqual(position.royal_square(1), (9, 4))
 
         with self.assertRaisesRegex(ValueError, 'Square \(9, 2\) is empty'):
             next(position.legal_moves_from_square((9, 2)))

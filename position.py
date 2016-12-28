@@ -52,6 +52,9 @@ class Position:
     def in_hand(self, player):
         return self._hands[player]  # please don't modify me!
 
+    def royal_square(self, player):
+        return self._royal_squares[player]
+
     def __str__(self):
         return ' '.join([self._sfen_board(),
                         self._sfen_player(),
