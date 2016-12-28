@@ -31,22 +31,22 @@ class PositionTestCase(unittest.TestCase):
             next(position.legal_drops_with_piece('S'))
 
         self.assertEqual(set(position.legal_moves_from_square((7, 4))),  # S7d
-                         set({(8, 3),
-                                      (7, 5), (6, 5)}))                  # noqa
+                         {(8, 3),
+                                  (7, 5), (6, 5)})                       # noqa
 
         self.assertEqual(set(position.legal_moves_from_square((5, 9))),  # +P5i
-                         set({        (5, 8),                            # noqa
-                              (6, 9),         (4, 9)}))
+                         {        (5, 8),                                # noqa
+                          (6, 9),         (4, 9)})
 
         self.assertEqual(set(position.legal_drops_with_piece('P')),      # P*
-                         set({(7, 1), (4, 1), (3, 1),
-                                              (3, 2),
-                              (7, 3),         (3, 3),
-                                      (4, 4), (3, 4),                    # noqa
-                              (7, 5), (4, 5),
-                                      (4, 6), (3, 6),
-                                      (4, 7), (3, 7),
-                                      (4, 8), (3, 8)}))
+                         {(7, 1), (4, 1), (3, 1),
+                                          (3, 2),
+                          (7, 3),         (3, 3),
+                                  (4, 4), (3, 4),                        # noqa
+                          (7, 5), (4, 5),
+                                  (4, 6), (3, 6),
+                                  (4, 7), (3, 7),
+                                  (4, 8), (3, 8)})
 
     def test_tiny_board(self):
         with self.assertRaisesRegex(ValueError, 'Too few ranks: 2 <'):
@@ -132,8 +132,7 @@ class PositionTestCase(unittest.TestCase):
         # we cannot drop a shogi knight on our last two further ranks
         position = self.check("3/GN'1/K1r/3/1k1 b N", 3, 5,
                               expected_status='check')
-        self.assertEqual(set(position.legal_drops_with_piece('N')),
-                         set({(2, 3)}))
+        self.assertEqual(set(position.legal_drops_with_piece('N')), {(2, 3)})
         self.check("GN'1/K1r/3/1k1 b N", 3, 4, expected_status='checkmate')
 
     def test_elementary_checkmate_with_sparrow_drops(self):
@@ -144,11 +143,11 @@ class PositionTestCase(unittest.TestCase):
     def test_pawn_drop_cannot_checkmate_but_other_drops_can_checkmate(self):
         position = self.check("2s/3/1N'K w lp")
         self.assertEqual(set(position.legal_drops_with_piece('P')),
-                         set({(3, 1), (2, 1),
-                              (3, 2), (2, 2)}))  # (1, 2) would give checkmate
+                         {(3, 1), (2, 1),
+                          (3, 2), (2, 2)})  # (1, 2) would give checkmate
         self.assertEqual(set(position.legal_drops_with_piece('L')),
-                         set({(3, 1), (2, 1),
-                              (3, 2), (2, 2), (1, 2)}))  # (1, 2) checkmates
+                         {(3, 1), (2, 1),
+                          (3, 2), (2, 2), (1, 2)})  # (1, 2) checkmates
 
     def test_pawn_drop_cannot_checkmate_even_when_in_check(self):
         position = self.check('lkb+R/b3/K3 b P', 4, 3, expected_status='check')
@@ -158,21 +157,20 @@ class PositionTestCase(unittest.TestCase):
     def test_pawn_drop_can_check_with_protected_drop(self):
         position = self.check('1k1/3/K2 b P2s')
         self.assertEqual(set(position.legal_drops_with_piece('P')),
-                         set({(3, 2), (2, 2), (1, 2),
-                                      (2, 3), (1, 3)}))
+                         {(3, 2), (2, 2), (1, 2),
+                                  (2, 3), (1, 3)})
 
     def test_pawn_drop_can_check_with_unprotected_drop(self):
         position = self.check('k2/1p1/2K w p')
         self.assertEqual(set(position.legal_drops_with_piece('P')),
-                         set({        (1, 1),                            # noqa
-                              (3, 2), (1, 2)}))  # (1, 2) drop not protected
+                         {        (1, 1),                                # noqa
+                          (3, 2), (1, 2)})  # (1, 2) drop not protected
 
     def test_pawn_drop_can_check_even_when_in_check(self):
         # similar to test_pawn_drop_cannot_checkmate_even_when_in_check
         #  except that opponent king has a flight square
         position = self.check('1kb+R/b3/K3 b P', 4, 3, expected_status='check')
-        self.assertEqual(set(position.legal_drops_with_piece('P')),
-                         set({(3, 2)}))
+        self.assertEqual(set(position.legal_drops_with_piece('P')), {(3, 2)})
 
     def test_real_checkmate(self):
         # thanks http://brainking.com/en/ArchivedGame?g=3748461
@@ -192,7 +190,7 @@ class PositionTestCase(unittest.TestCase):
         position = self.check('6/1ce@4/5K/6/2R2k w -', 6, 5,
                               expected_status='check')
         self.assertEqual(set(position.legal_moves_from_square((5, 2))),  # CE
-                         set({(2, 5)}))
+                         {(2, 5)})
 
     def test_elementary_stalemate(self):
         self.check("2k/3/KQ'1 w R", expected_status='stalemate')  # with queen
