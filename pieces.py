@@ -47,7 +47,7 @@ class Pieces:
                                       .format(abbrev))
 
             if self.is_promoted(abbrev):
-                if abbrev[1:] not in self._betza:
+                if self.unpromoted(abbrev) not in self._betza:
                     raise PiecesException('Unpromoted version of {} missing'
                                           .format(abbrev))
             elif not self.can_promote(abbrev) and not betza.can_retreat():
@@ -65,7 +65,7 @@ class Pieces:
         return abbrev in self._betza
 
     def can_promote(self, abbrev):
-        return "+{}".format(abbrev) in self._betza
+        return self.promoted(abbrev) in self._betza
 
     def is_royal(self, abbrev):
         return abbrev in self._royal
@@ -85,3 +85,13 @@ class Pieces:
     @staticmethod
     def is_promoted(abbrev):
         return abbrev[0] == '+'
+
+    @staticmethod
+    def promoted(abbrev):
+        assert not Pieces.is_promoted(abbrev)
+        return '+' + abbrev
+
+    @staticmethod
+    def unpromoted(abbrev):
+        assert Pieces.is_promoted(abbrev)
+        return abbrev[1:]
