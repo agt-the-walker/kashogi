@@ -138,11 +138,17 @@ class PositionTestCase(unittest.TestCase):
         self.assertEqual(set(position.legal_drops_with_piece('P')),
                          set())  # (3, 2) would give checkmate
 
-    def test_pawn_drop_can_check(self):
+    def test_pawn_drop_can_check_with_protected_drop(self):
         position = self.check('1k1/3/K2 b P2s')
         self.assertEqual(set(position.legal_drops_with_piece('P')),
                          set({(3, 2), (2, 2), (1, 2),
                                       (2, 3), (1, 3)}))
+
+    def test_pawn_drop_can_check_with_unprotected_drop(self):
+        position = self.check('k2/1p1/2K w p')
+        self.assertEqual(set(position.legal_drops_with_piece('P')),
+                         set({        (1, 1),                            # noqa
+                              (3, 2), (1, 2)}))  # (1, 2) drop not protected
 
     def test_pawn_drop_can_check_even_when_in_check(self):
         # similar to test_pawn_drop_cannot_checkmate_even_when_in_check
