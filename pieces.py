@@ -47,9 +47,16 @@ class Pieces:
                 if not betza.can_retreat():
                     raise PiecesException('Promoted piece {} cannot retreat'
                                           .format(abbrev))
+                elif self.is_royal(abbrev):
+                    raise PiecesException('Promoted piece {} cannot be royal'
+                                          .format(abbrev))
                 elif self.unpromoted(abbrev) not in self._betza:
                     raise PiecesException('Unpromoted version of {} missing'
                                           .format(abbrev))
+
+            elif self.can_promote(abbrev) and self.is_royal(abbrev):
+                raise PiecesException('Promotable piece {} cannot be royal'
+                                      .format(abbrev))
 
             elif not self.can_promote(abbrev) and not betza.can_retreat():
                 raise PiecesException('Unpromotable piece {} cannot retreat'

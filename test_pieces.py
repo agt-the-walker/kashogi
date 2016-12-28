@@ -44,6 +44,14 @@ class PiecesTestCase(unittest.TestCase):
                                     'Unpromotable piece L cannot retreat'):
             Pieces('support/cannot_retreat_unpromotable.yaml')
 
+    def test_cannot_be_royal(self):
+        with self.assertRaisesRegex(PiecesException,
+                                    'Promoted piece \+K cannot be royal'):
+            Pieces('support/cannot_be_royal_promoted.yaml')
+        with self.assertRaisesRegex(PiecesException,
+                                    'Promotable piece K cannot be royal'):
+            Pieces('support/cannot_be_royal_promotable.yaml')
+
     def test_cannot_unpromote(self):
         with self.assertRaisesRegex(PiecesException,
                                     'Unpromoted version of \+P missing'):
