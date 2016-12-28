@@ -42,14 +42,6 @@ class Position:
     def num_files(self):
         return self._num_files
 
-    def status(self):
-        try:
-            next(self._legal_moves_and_drops())
-            if self._checking_piece:
-                return 'check'
-        except StopIteration:
-            return 'checkmate' if self._checking_piece else 'stalemate'
-
     def __str__(self):
         return ' '.join([self._sfen_board(),
                         self._sfen_player(),
@@ -168,6 +160,14 @@ class Position:
                 if piece_range == 0 or piece_range >= range:
                     # my piece has enough range to check him
                     return abbrev
+
+    def status(self):
+        try:
+            next(self._legal_moves_and_drops())
+            if self._checking_piece:
+                return 'check'
+        except StopIteration:
+            return 'checkmate' if self._checking_piece else 'stalemate'
 
     def _legal_moves_and_drops(self):
         yield from self._legal_moves()
