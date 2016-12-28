@@ -42,16 +42,15 @@ class Pieces:
         for abbrev, betza in self._betza.items():
             if not betza.can_advance():
                 raise PiecesException('Piece {} cannot advance'.format(abbrev))
-            if self._promoted(abbrev) and not betza.can_retreat():
+            if self.is_promoted(abbrev) and not betza.can_retreat():
                 raise PiecesException('Promoted piece {} cannot retreat'
                                       .format(abbrev))
 
-            if self._promoted(abbrev):
+            if self.is_promoted(abbrev):
                 if abbrev[1:] not in self._betza:
                     raise PiecesException('Unpromoted version of {} missing'
                                           .format(abbrev))
-            elif "+{}".format(abbrev) not in self._betza and \
-                    not betza.can_retreat():
+            elif not self.can_promote(abbrev) and not betza.can_retreat():
                 raise PiecesException('Unpromotable piece {} cannot retreat'
                                       .format(abbrev))
 
@@ -64,6 +63,9 @@ class Pieces:
 
     def exist(self, abbrev):
         return abbrev in self._betza
+
+    def can_promote(self, abbrev):
+        return "+{}".format(abbrev) in self._betza
 
     def is_royal(self, abbrev):
         return abbrev in self._royal
@@ -81,5 +83,5 @@ class Pieces:
         return self._betza[abbrev].num_restricted_furthest_ranks()
 
     @staticmethod
-    def _promoted(abbrev):
+    def is_promoted(abbrev):
         return abbrev[0] == '+'

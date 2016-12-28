@@ -273,6 +273,45 @@ class PositionTestCase(unittest.TestCase):
                    "k2/p'p'sc@/p'1P'/P'P'SC@/K2 b RFF@11SC@pn'p'2rr@",
                    expected_status='check')
 
+    def test_promotion_choices_for_black(self):
+        position = self.check('2k/P2/S1P/NP+B/2N/1N1/G2/3/1K1 b -', 3, 9)
+
+        # already promoted (+B)
+        self.assertEqual(position.promotions((1, 4), (2, 3)), [False])
+
+        # no promoted version (G)
+        self.assertEqual(position.promotions((3, 7), (3, 6)), [False])
+
+        # can promote (P)
+        self.assertEqual(position.promotions((2, 4), (2, 3)), [False, True])
+        self.assertEqual(position.promotions((1, 3), (1, 2)), [False, True])
+        # must promote (P)
+        self.assertEqual(position.promotions((3, 2), (3, 1)), [True])
+
+        # cannot promote (N)
+        self.assertEqual(position.promotions((2, 6), (1, 4)), [False])
+        # can promote (N)
+        self.assertEqual(position.promotions((1, 5), (2, 3)), [False, True])
+        # must promote (N)
+        self.assertEqual(position.promotions((3, 4), (2, 2)), [True])
+
+        # moves wholly within promotion zone (S)
+        self.assertEqual(position.promotions((3, 3), (2, 2)), [False, True])
+
+    def test_promotion_choices_for_white(self):
+        position = self.check('2k/3/3/1n1/n2/1n1/r1n/3/2K w -', 3, 9)
+
+        # cannot promote (N)
+        self.assertEqual(position.promotions((2, 4), (1, 6)), [False])
+        # can promote (N)
+        self.assertEqual(position.promotions((3, 5), (2, 7)), [False, True])
+        # must promote (N)
+        self.assertEqual(position.promotions((2, 6), (3, 8)), [True])
+        self.assertEqual(position.promotions((1, 7), (2, 9)), [True])
+
+        # moves out of promotion zone (R)
+        self.assertEqual(position.promotions((3, 7), (3, 6)), [False, True])
+
     def check(self, sfen, expected_num_files=3, expected_num_ranks=3,
               expected_sfen=None, expected_status=None):
         position = Position(sfen, self._pieces)

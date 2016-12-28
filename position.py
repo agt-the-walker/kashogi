@@ -292,6 +292,28 @@ class Position:
 
         return result
 
+    def promotions(self, square, dest_square):
+        # No (pseudo) legal check is performed, we consider that the client
+        #  calls this on squares returned by legal_moves_from_square()
+        piece = self._board[square]
+        abbrev = piece.upper()
+
+        if self._pieces.is_promoted(abbrev):
+            return [False]
+        elif not self._pieces.can_promote(abbrev):
+            return [False]
+
+        _, dest_rank = dest_square
+        if not self._is_piece_allowed_on_rank(abbrev, self._player_to_move,
+                                              dest_rank):
+            return [True]  # i.e. mandatory
+        elif self._in_promotion_zone(square):
+            return [False, True]
+        elif self._in_promotion_zone(dest_square):
+            return [False, True]
+        else:
+            return [False]
+
     def legal_drops_with_piece(self, abbrev):
         if not self._hands[self._player_to_move].get(abbrev):
             raise ValueError('Piece {} is not in hand'.format(abbrev))
@@ -356,9 +378,15 @@ class Position:
         if not num_restricted:
             return True
 
-        nth_furthest_rank = {0: rank, 1: self.num_ranks+1 - rank}[player]
-        assert nth_furthest_rank > 0
-        return num_restricted < nth_furthest_rank
+        return num_restricted < self._nth_furthest_rank(player, rank)
+
+    def _in_promotion_zone(self, square):
+        _, rank = square
+        return (self._promotion_zone_height() >=
+                self._nth_furthest_rank(self._player_to_move, rank))
+
+    def _nth_furthest_rank(self, player, rank):
+        return {0: rank, 1: self._num_ranks+1 - rank}[player]
 
     def _promotion_zone_height(self):
         return self._num_ranks // 3  # ok for Tori, standard, Okisaki, Wa shogi
