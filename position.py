@@ -44,7 +44,7 @@ class Position:
 
     def status(self):
         try:
-            next(self._legal_moves())
+            next(self._legal_moves_and_drops())
             if self._checking_piece:
                 return 'check'
         except StopIteration:
@@ -169,6 +169,12 @@ class Position:
                     # my piece has enough range to check him
                     return abbrev
 
+    def _legal_moves_and_drops(self):
+        yield from self._legal_moves()
+
+        for abbrev in self._hands[self._player_to_move]:
+            yield from self.legal_drops_with_piece(abbrev)
+
     def _legal_moves(self):
         for square in list(self._board):
             piece = self._board[square]
@@ -179,9 +185,6 @@ class Position:
                 continue  # found one of his pieces
 
             yield from self.legal_moves_from_square(square)
-
-        for abbrev in self._hands[self._player_to_move]:
-            yield from self.legal_drops_with_piece(abbrev)
 
     def legal_moves_from_square(self, square):
         for dest_square in self._pseudo_legal_moves_from_square(square):
