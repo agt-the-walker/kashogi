@@ -260,7 +260,7 @@ class Position:
 
                 if self._has_pseudo_legal_drop(abbrev, square) and \
                    self._is_legal_drop(abbrev, square):
-                        yield square  # drop blocks check
+                    yield square
 
     def _has_pseudo_legal_drop(self, abbrev, square):
         file, rank = square
