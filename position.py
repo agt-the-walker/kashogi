@@ -42,6 +42,16 @@ class Position:
     def num_files(self):
         return self._num_files
 
+    @property
+    def player_to_move(self):
+        return self._player_to_move
+
+    def get(self, square):
+        return self._board.get(square)
+
+    def in_hand(self, player):
+        return self._hands[player]  # please don't modify me!
+
     def __str__(self):
         return ' '.join([self._sfen_board(),
                         self._sfen_player(),

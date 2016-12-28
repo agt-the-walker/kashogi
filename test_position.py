@@ -17,6 +17,9 @@ class PositionTestCase(unittest.TestCase):
                'LN2+p3L w Sbgn3p'
         # we ignore move count, etc.
         position = self.check(sfen + ' 124', 9, 9, sfen)
+        self.assertEqual(position.player_to_move, 1)
+        self.assertEqual(position.get((2, 8)), '+r')
+        self.assertEqual(position.in_hand(1), {'B': 1, 'G': 1, 'N': 1, 'P': 3})
 
         with self.assertRaisesRegex(ValueError, 'Square \(9, 2\) is empty'):
             next(position.legal_moves_from_square((9, 2)))
