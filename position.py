@@ -111,6 +111,9 @@ class Position:
         if not self._is_piece_allowed_on_rank(abbrev, player, rank):
             raise ValueError('{} for {} found on furthest rank(s)'
                              .format(abbrev, self._player_name(player)))
+        elif (self._pieces.num_restricted_furthest_ranks(abbrev) >
+              self._promotion_zone_height()):
+            raise ValueError('Promotion zone too small for {}'.format(abbrev))
 
         self._all_coordinates.update(self._pieces.directions(abbrev).keys())
         self._board[(file, rank)] = piece
@@ -343,6 +346,9 @@ class Position:
         nth_furthest_rank = {0: rank, 1: self.num_ranks+1 - rank}[player]
         assert nth_furthest_rank > 0
         return num_restricted < nth_furthest_rank
+
+    def _promotion_zone_height(self):
+        return self._num_ranks // 3  # ok for Tori, standard, Okisaki, Wa shogi
 
     def _player_name(self, player):
         assert player < self.NUM_PLAYERS

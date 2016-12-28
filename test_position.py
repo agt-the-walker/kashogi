@@ -83,6 +83,11 @@ class PositionTestCase(unittest.TestCase):
                                     'N for black found on furthest rank'):
             self.check('k2/1N1/3/1K1 b -')
 
+    def test_promotion_zone_too_small(self):
+        with self.assertRaisesRegex(ValueError,
+                                    'Promotion zone too small for N'):
+            self.check('rbsgk/3np/5/P4/KGSBR b -')
+
     def test_minishogi_starting_position(self):
         self.check('rbsgk/4p/5/P4/KGSBR b -', 5, 5)
 
@@ -133,7 +138,7 @@ class PositionTestCase(unittest.TestCase):
         self.check("R1k/1s'1/bs'K/3 w s'", 3, 4, expected_status='checkmate')
 
     def test_pawn_drop_cannot_checkmate_but_other_drops_can_checkmate(self):
-        position = self.check('2s/3/1NK w lp')
+        position = self.check("2s/3/1N'K w lp")
         self.assertEqual(set(position.legal_drops_with_piece('P')),
                          set({(3, 1), (2, 1),
                               (3, 2), (2, 2)}))  # (1, 2) would give checkmate
@@ -203,8 +208,8 @@ class PositionTestCase(unittest.TestCase):
         self.check('3/3/3 w P', expected_status='stalemate')
 
     def test_blocked_board(self):
-        self.check('SSS/PPP/KNN b P', expected_status='stalemate')
-        self.check('SSS/PPP/KNN w p', expected_status='stalemate')
+        self.check("SSS/PPP/KN'N' b P", expected_status='stalemate')
+        self.check("SSS/PPP/KN'N' w p", expected_status='stalemate')
 
     def test_adjacent_kings(self):
         with self.assertRaisesRegex(ValueError,
@@ -236,7 +241,7 @@ class PositionTestCase(unittest.TestCase):
     def test_opponent_in_check_by_jumping_pieces(self):
         with self.assertRaisesRegex(ValueError,
                                     'Opponent already in check by N'):
-            self.check('n2/PPP/1K1 w -')
+            self.check("n'2/PPP/1K1 w -")
         with self.assertRaisesRegex(ValueError,
                                     'Opponent already in check by TF'):
             self.check('tf@2/PPP/2K w -')
