@@ -221,31 +221,6 @@ class Position:
                         break
                     range -= 1
 
-    def legal_drops_with_piece(self, abbrev):
-        for rank in range(1, self._num_ranks+1):
-            for file in range(1, self._num_files+1):
-                square = (file, rank)
-                if self._board.get(square):
-                    continue  # not empty
-
-                if self._has_pseudo_legal_drop(abbrev, square) and \
-                   self._is_legal_drop(abbrev, square):
-                        yield square  # drop blocks check
-
-    def _has_pseudo_legal_drop(self, abbrev, square):
-        file, rank = square
-        player = self._player_to_move
-
-        max_per_file = self._pieces.max_per_file(abbrev)
-        if max_per_file and \
-           max_per_file == self._num_per_file[player][abbrev][file]:
-            return False  # Nifu and related restrictions
-
-        if not self._is_piece_allowed_on_rank(abbrev, player, rank):
-            return False  # rank restriction
-
-        return True
-
     def _is_legal_move(self, square, dest_square):
         player = self._player_to_move
 
@@ -275,6 +250,31 @@ class Position:
         assert(None not in self._board.values())
 
         return result
+
+    def legal_drops_with_piece(self, abbrev):
+        for rank in range(1, self._num_ranks+1):
+            for file in range(1, self._num_files+1):
+                square = (file, rank)
+                if self._board.get(square):
+                    continue  # not empty
+
+                if self._has_pseudo_legal_drop(abbrev, square) and \
+                   self._is_legal_drop(abbrev, square):
+                        yield square  # drop blocks check
+
+    def _has_pseudo_legal_drop(self, abbrev, square):
+        file, rank = square
+        player = self._player_to_move
+
+        max_per_file = self._pieces.max_per_file(abbrev)
+        if max_per_file and \
+           max_per_file == self._num_per_file[player][abbrev][file]:
+            return False  # Nifu and related restrictions
+
+        if not self._is_piece_allowed_on_rank(abbrev, player, rank):
+            return False  # rank restriction
+
+        return True
 
     def _is_legal_drop(self, abbrev, dest_square):
         player = self._player_to_move
