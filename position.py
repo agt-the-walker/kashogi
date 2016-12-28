@@ -131,6 +131,20 @@ class Position:
         self._all_coordinates.update(self._pieces.directions(abbrev).keys())
         self._board[(file, rank)] = piece
 
+    def _parse_hands(self, sfen_hands):
+        for number, piece in re.findall('([1-9][0-9]*)?(' +
+                                        self.UNPROMOTED_PIECE_REGEX + ')',
+                                        sfen_hands):
+            abbrev = piece.upper()
+            if not self._pieces.exist(abbrev):
+                raise ValueError('Invalid piece in hand: {}'.format(piece))
+            if self._pieces.is_royal(abbrev):
+                raise ValueError('Royal piece in hand: {}'.format(piece))
+
+            player = 0 if abbrev == piece else 1
+            number = int(number) if number.isdigit() else 1
+            self._hands[player][abbrev] += number
+
     def _verify_opponent_not_in_check(self):
         opponent = self.NUM_PLAYERS - self._player_to_move - 1
         piece = self._piece_giving_check_to(opponent)
@@ -336,20 +350,6 @@ class Position:
             return False
         except StopIteration:
             return True
-
-    def _parse_hands(self, sfen_hands):
-        for number, piece in re.findall('([1-9][0-9]*)?(' +
-                                        self.UNPROMOTED_PIECE_REGEX + ')',
-                                        sfen_hands):
-            abbrev = piece.upper()
-            if not self._pieces.exist(abbrev):
-                raise ValueError('Invalid piece in hand: {}'.format(piece))
-            if self._pieces.is_royal(abbrev):
-                raise ValueError('Royal piece in hand: {}'.format(piece))
-
-            player = 0 if abbrev == piece else 1
-            number = int(number) if number.isdigit() else 1
-            self._hands[player][abbrev] += number
 
     def _is_piece_allowed_on_rank(self, abbrev, player, rank):
         num_restricted = self._pieces.num_restricted_furthest_ranks(abbrev)
