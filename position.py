@@ -274,19 +274,16 @@ class Position:
 
         # perform the move
         saved_piece = self._board.get(dest_square)
-        self._board[dest_square] = self._board[square]
-        del self._board[square]
+        self._board[dest_square] = self._board.pop(square)
 
         result = True
         if self._piece_giving_check_to(player, royal_square):
             result = False
 
         # revert the move to restore the board to its initial state
-        self._board[square] = self._board[dest_square]
+        self._board[square] = self._board.pop(dest_square)
         if saved_piece:
             self._board[dest_square] = saved_piece
-        else:
-            del self._board[dest_square]
 
         assert(None not in self._board.values())
 
