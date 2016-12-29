@@ -414,7 +414,7 @@ class Position:
               self._is_opponent_checkmated()):
             result = False  # cannot checkmate opponent with drop
 
-        # revert the drop restore the board to its initial state
+        # revert the drop to restore the board to its initial state
         del self._board[dest_square]
 
         assert(None not in self._board.values())
