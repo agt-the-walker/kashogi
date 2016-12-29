@@ -328,6 +328,45 @@ class PositionTestCase(unittest.TestCase):
         self.assertEqual(str(position), '2k/1s1/K2 b 2s')
         self.assertEqual(position.status(), 'check')
 
+    def test_king_move(self):
+        position = self.check('1k1/2P/1K1 b P')
+
+        position.move((2, 3), (3, 3), False)  # simple move
+        self.assertEqual(str(position), '1k1/2P/K2 w P')
+        self.assertEqual(position.royal_square(0), (3, 3))
+
+        position.move((2, 1), (1, 2), False)  # king captures pawn
+        self.assertEqual(str(position), '3/2k/K2 b Pp')
+        self.assertEqual(position.royal_square(1), (1, 2))
+
+        position.drop('P', (1, 3))  # no nifu (due to previous capture)
+        self.assertEqual(str(position), '3/2k/K1P w p')
+        self.assertEqual(position.status(), 'check')
+
+        with self.assertRaisesRegex(ValueError, 'Illegal move'):
+            position.move((1, 2), (2, 2), False)  # adjacent kings
+        with self.assertRaisesRegex(ValueError, 'Illegal promotion'):
+            position.move((1, 2), (1, 3), True)  # king cannot promote
+
+    def test_pawn_move(self):
+        position = self.check('2k/1p1/K2 w p')
+
+        position.move((2, 2), (2, 3), True)  # promotes
+        self.assertEqual(str(position), '2k/3/K+p1 b p')
+        self.assertEqual(position.status(), 'check')
+
+        position.move((3, 3), (3, 2), False)  # king moves
+        self.assertEqual(str(position), '2k/K2/1+p1 w p')
+
+        position.drop('P', (2, 2))  # no nifu (since pawn has promoted)
+
+    def test_capture_promoted_piece_while_promoting(self):
+        position = self.check('1+rk/3/KL1 b -')
+
+        position.move((2, 3), (2, 1), True)  # promotes and capture promoted
+        self.assertEqual(str(position), '1+Lk/3/K2 w R')
+        self.assertEqual(position.status(), 'check')
+
     def check(self, sfen, expected_num_files=3, expected_num_ranks=3,
               expected_sfen=None, expected_status=None):
         position = Position(sfen, self._pieces)

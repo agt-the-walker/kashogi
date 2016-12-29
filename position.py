@@ -216,6 +216,48 @@ class Position:
 
             yield from self.legal_moves_from_square(square, player)
 
+    def move(self, square, dest_square, promotes):
+        if dest_square not in self.legal_moves_from_square(square):
+            raise ValueError('Illegal move')
+        if promotes not in self.promotions(square, dest_square):
+            raise ValueError('Illegal promotion')
+
+        player = self._player_to_move
+
+        # perform the move
+        piece = self._board.pop(square)
+        captured_piece = self._board.get(dest_square)
+        if promotes:
+            self._board[dest_square] = self._pieces.promoted(piece)
+
+            # update statistics
+            abbrev = piece.upper()
+            max_per_file = self._pieces.max_per_file(abbrev)
+            if max_per_file:
+                file, _ = square
+                self._num_per_file[player][abbrev][file] -= 1
+        else:
+            self._board[dest_square] = piece
+
+        # captured piece goes in hand
+        if captured_piece:
+            captured_abbrev = captured_piece.upper()
+            if self._pieces.is_promoted(captured_abbrev):
+                captured_abbrev = self._pieces.unpromoted(captured_abbrev)
+            self._hands[player][captured_abbrev] += 1
+
+        # update statistics
+        if self._royal_squares[player] == square:
+            self._royal_squares[player] = dest_square
+        if captured_piece:
+            captured_max_per_file = self._pieces.max_per_file(captured_abbrev)
+            if captured_max_per_file:
+                file, _ = dest_square
+                opponent = self.NUM_PLAYERS - player - 1
+                self._num_per_file[opponent][captured_abbrev][file] -= 1
+
+        self._end_turn()
+
     def legal_moves_from_square(self, square, player=None):
         if player is None:
             player = self._player_to_move
@@ -273,7 +315,7 @@ class Position:
             royal_square = dest_square  # we have moved the royal piece
 
         # perform the move
-        saved_piece = self._board.get(dest_square)
+        captured_piece = self._board.get(dest_square)
         self._board[dest_square] = self._board.pop(square)
 
         result = True
@@ -282,8 +324,8 @@ class Position:
 
         # revert the move to restore the board to its initial state
         self._board[square] = self._board.pop(dest_square)
-        if saved_piece:
-            self._board[dest_square] = saved_piece
+        if captured_piece:
+            self._board[dest_square] = captured_piece
 
         assert(None not in self._board.values())
 
