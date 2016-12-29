@@ -1,0 +1,8 @@
+P:
+  betza: fW
+  flags:
+    - max_1_per_file
++P:
+  betza: WfF
+  flags:
+    - max_2_per_file

@@ -27,6 +27,9 @@ class Pieces:
 
             self._betza[abbrev] = Betza(info['betza'])
             if 'flags' in info:
+                if self.is_promoted(abbrev):
+                    raise PiecesException('Promoted piece {} cannot have flags'
+                                          .format(abbrev))
                 for flag in info['flags']:
                     if flag == 'royal':
                         self._royal.add(abbrev)
@@ -46,9 +49,6 @@ class Pieces:
             elif self.is_promoted(abbrev):
                 if not betza.can_retreat():
                     raise PiecesException('Promoted piece {} cannot retreat'
-                                          .format(abbrev))
-                elif self.is_royal(abbrev):
-                    raise PiecesException('Promoted piece {} cannot be royal'
                                           .format(abbrev))
                 elif self.unpromoted(abbrev) not in self._betza:
                     raise PiecesException('Unpromoted version of {} missing'

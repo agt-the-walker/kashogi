@@ -32,6 +32,14 @@ class PiecesTestCase(unittest.TestCase):
                                     'Invalid piece abbreviation: Ph'):
             Pieces('support/invalid_abbreviation.yaml')
 
+    def test_cannot_have_flags(self):
+        with self.assertRaisesRegex(PiecesException,
+                                    'Promoted piece \+P cannot have flags'):
+            Pieces('support/cannot_have_flags_max_per_file.yaml')
+        with self.assertRaisesRegex(PiecesException,
+                                    'Promoted piece \+K cannot have flags'):
+            Pieces('support/cannot_have_flags_royal.yaml')
+
     def test_cannot_advance(self):
         with self.assertRaisesRegex(PiecesException, 'Piece P cannot advance'):
             Pieces('support/cannot_advance.yaml')
@@ -45,9 +53,6 @@ class PiecesTestCase(unittest.TestCase):
             Pieces('support/cannot_retreat_unpromotable.yaml')
 
     def test_cannot_be_royal(self):
-        with self.assertRaisesRegex(PiecesException,
-                                    'Promoted piece \+K cannot be royal'):
-            Pieces('support/cannot_be_royal_promoted.yaml')
         with self.assertRaisesRegex(PiecesException,
                                     'Promotable piece K cannot be royal'):
             Pieces('support/cannot_be_royal_promotable.yaml')
