@@ -5,6 +5,7 @@ python:
 - "nightly"
 install:
 - pip install coveralls
+- pip install -r requirements.txt
 script:
 - nosetests -v
 after_success:
