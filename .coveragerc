@@ -1,2 +1,4 @@
 [report]
-omit = *yaml*
+omit =
+    *yaml*
+    */python?.?/*
