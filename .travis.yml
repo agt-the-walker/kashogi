@@ -1,0 +1,10 @@
+language: python
+sudo: false
+python:
+- "nightly"
+install:
+- pip install coveralls
+script:
+- nosetests -v
+after_success:
+- coveralls
