@@ -1,6 +1,7 @@
 language: python
 sudo: false
 python:
+- "3.5"
 - "nightly"
 install:
 - pip install coveralls
