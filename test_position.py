@@ -11,7 +11,7 @@ class PositionTestCase(unittest.TestCase):
     def setUpClass(cls):
         cls._pieces = Pieces()
 
-    def test_standard_shogi(self):
+    def test_standard_shogi_random_position(self):
         # thanks http://shogi.typepad.jp/brainstorm/2007/01/post_11a0.html
         sfen = '8l/1l+R2P3/p2pBG1pp/kps1p4/Nn1P2G2/P1P1P2PP/1PS6/1KSG3+r1/'\
                'LN2+p3L w Sbgn3p'
@@ -47,6 +47,37 @@ class PositionTestCase(unittest.TestCase):
                                   (4, 6), (3, 6),
                                   (4, 7), (3, 7),
                                   (4, 8), (3, 8)})
+
+    def test_standard_shogi_shortest_game(self):
+        # thanks http://userpages.monmouth.com/~colonel/shortshogi.html
+        sfen = 'lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b -'
+        position = self.check(sfen + ' 1', 9, 9, sfen)
+
+        position.move((7, 7), (7, 6), False)  # 1. P-7f
+        position.move((6, 1), (7, 2), False)  # 2. G-7b
+        position.move((8, 8), (3, 3), True)   # 3. Bx3c+
+        position.move((4, 1), (4, 2), False)  # 4. G-4b
+        position.move((3, 3), (4, 2), False)  # 5. +Bx4b
+        position.move((5, 1), (6, 1), False)  # 6. K-6a
+        position.drop('G', (5, 2))            # 7. G*5b
+
+        final_sfen = 'lnsk2snl/1rg1G+B1b1/pppppp1pp/9/9/2P6/PP1PPPPPP/7R1/'\
+                     'LNSGKGSNL w P'
+        self.assertEqual(str(position), final_sfen)
+        self.assertEqual(position.royal_square(1), (6, 1))
+        self.assertEqual(position.status(), 'checkmate')
+
+    def test_tsumeshogi(self):
+        # thanks https://en.wikipedia.org/wiki/Tsumeshogi
+        position = self.check('3sks3/9/4+P4/9/7+B1/9/9/9/9 b S2rb4g4n17p',
+                              9, 9)
+        position.move((2, 5), (5, 2), False)  # 1. +B-5b
+        position.move((4, 1), (5, 2), False)  # 2. Sx5b
+        position.drop('S', (4, 2))            # 3. S*4b
+
+        final_sfen = '3sk4/4sS3/4+P4/9/9/9/9/9/9 w 2r2b4g4n17p'
+        self.assertEqual(str(position), final_sfen)
+        self.assertEqual(position.status(), 'checkmate')
 
     def test_tiny_board(self):
         with self.assertRaisesRegex(ValueError, 'Too few ranks: 2 <'):
