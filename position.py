@@ -198,6 +198,7 @@ class Position:
                 return 'check'
         except StopIteration:
             return 'checkmate' if self._checking_piece else 'stalemate'
+        return ''
 
     def _legal_moves_and_drops(self):
         yield from self._legal_moves(self._player_to_move)
@@ -216,7 +217,7 @@ class Position:
 
             yield from self.legal_moves_from_square(square, player)
 
-    def move(self, square, dest_square, promotes):
+    def move(self, square, dest_square, promotes=False):
         if dest_square not in self.legal_moves_from_square(square):
             raise ValueError('Illegal move')
         if promotes not in self.promotions(square, dest_square):

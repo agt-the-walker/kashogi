@@ -399,7 +399,7 @@ class PositionTestCase(unittest.TestCase):
         self.assertEqual(position.status(), 'check')
 
     def check(self, sfen, expected_num_files=3, expected_num_ranks=3,
-              expected_sfen=None, expected_status=None):
+              expected_sfen=None, expected_status=''):
         position = Position(sfen, self._pieces)
         self.assertEqual(position.num_files, expected_num_files)
         self.assertEqual(position.num_ranks, expected_num_ranks)
