@@ -29,12 +29,58 @@ class PositionTestCase(unittest.TestCase):
             game.move((1, 3), (2, 3))
 
             if try_rule:
-                self.assertEqual(game.winner(), 1)
+                self.assertEqual(game.result(), 1)
             else:
-                self.assertIsNone(game.winner())
+                self.assertIsNone(game.result())
 
     def test_game_win_by_stalemate(self):
         game = Game('1k1/3/1K1 b BD@', self._pieces, True)
         game.drop('BD', (2, 2))
         self.assertEqual(game.status(), 'stalemate')
-        self.assertEqual(game.winner(), 0)
+        self.assertEqual(game.result(), 0)
+
+    def test_game_draw_by_fourfold(self):
+        game = Game('2k/3/K2 b -', self._pieces, True)
+        game.move((3, 3), (3, 2))
+        game.move((1, 1), (1, 2))
+        for _ in range(3):
+            self.assertIsNone(game.result())
+            game.move((3, 2), (3, 1))
+            self.assertIsNone(game.result())
+            game.move((1, 2), (1, 3))
+            self.assertIsNone(game.result())
+            game.move((3, 1), (3, 2))
+            self.assertIsNone(game.result())
+            game.move((1, 3), (1, 2))
+        self.assertEqual(game.result(), game.NUM_PLAYERS)
+
+    def test_game_win_by_fourfold_due_to_perpetual_check(self):
+        game = Game('1k1/2r/K2 w -', self._pieces, True)
+        game.move((1, 2), (3, 2))
+        for _ in range(3):
+            self.assertIsNone(game.result())
+            game.move((3, 3), (2, 3))
+            self.assertIsNone(game.result())
+            game.move((3, 2), (2, 2))
+            self.assertIsNone(game.result())
+            game.move((2, 3), (3, 3))
+            self.assertIsNone(game.result())
+            game.move((2, 2), (3, 2))
+        self.assertEqual(game.result(), 0)
+
+    def test_game_loss_by_fourfold_due_to_perpetual_check(self):
+        game = Game('2k/1R1/1K1 b -', self._pieces, True)
+        for _ in range(3):
+            self.assertIsNone(game.result())
+            game.move((2, 2), (1, 2))
+            self.assertIsNone(game.result())
+            game.move((1, 1), (2, 1))
+            self.assertIsNone(game.result())
+            game.move((1, 2), (2, 2))
+            self.assertIsNone(game.result())
+            game.move((2, 1), (1, 1))
+        self.assertEqual(game.result(), 1)
+
+
+if __name__ == '__main__':
+    unittest.main()
