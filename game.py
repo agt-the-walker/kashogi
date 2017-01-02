@@ -74,4 +74,6 @@ class Game:
 
         return all(self._in_check[half_moves] for half_moves in
                    range(self._sfens[self._sfen][2] - offset,
-                         self._sfens[self._sfen][3] - offset + 2, 2))
+                         self._sfens[self._sfen][3] - offset
+                                                    + self.NUM_PLAYERS,  # noqa
+                         self.NUM_PLAYERS))
