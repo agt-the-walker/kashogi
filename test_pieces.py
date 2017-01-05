@@ -14,6 +14,8 @@ class PiecesTestCase(unittest.TestCase):
         self.assertTrue(pieces.exist("+A'"))
         self.assertFalse(pieces.exist("FF@"))
 
+        self.assertEqual(pieces.kanji("Q'"), '妃')
+
         self.assertTrue(pieces.is_royal('K'))
         self.assertFalse(pieces.is_royal('N'))
 

@@ -4,130 +4,185 @@ K:
   betza: K
   flags:
     - royal 
+  kanji: 王
 R:
   betza: R
+  kanji: 飛
 B:
   betza: B
+  kanji: 角
 G:
   betza: WfF
+  kanji: 金
 S:
   betza: FfW
+  kanji: 銀
 N:
   betza: ffN
+  kanji: 桂
 L:
   betza: fR
+  kanji: 香
 P:
   betza: fW
   flags:
     - max_1_per_file
     - no_drop_mate
+  kanji: 歩
 
 +R:
   betza: FR
+  kanji: 龍
 +B:
   betza: WB
+  kanji: 馬
 +S:
   betza: WfF
+  kanji: 全
 +N:
   betza: WfF
+  kanji: 圭
 +L:
   betza: WfF
+  kanji: 杏
 +P:
   betza: WfF
+  kanji: と
 
 # Wa shogi
 
 CE:
   betza: fbRfB3K
+  kanji: 鷲
 TF:
   betza: fbWFfbDA
+  kanji: 狐
 FF:
   betza: fWB
+  kanji: 鷹
 RR:
   betza: fRFbW
+  kanji: 兎
 VW:
   betza: WfF
+  kanji: 狼
 VS:
   betza: FfW
+  kanji: 鹿
 BD:
   betza: fFrlbW
+  kanji: 犬
 CM:
   betza: fFfbW
+  kanji: 猿
 FG:
   betza: fFfbW
+  kanji: 鳫
 FC:
   betza: fFrlW
+  kanji: 鶏
 SW:
   betza: WrlR
+  kanji: 羽
 SC:
   betza: fWbF
+  kanji: 烏
 SO:
   betza: fWbF
+  kanji: 鴟
 LH:
   betza: fRbR2
+  kanji: 風
 OC:
   betza: fR
+  kanji: 車
 
 +FF:
   betza: fbRBW
+  kanji: 執
 +RR:
   betza: fbWFfbDA
+  kanji: 狐
 +VW:
   betza: K
+  kanji: 熊
 +VS:
   betza: FfrlW
+  kanji: 猪
 +BD:
   betza: WfF
+  kanji: 狼
 +CM:
   betza: FfW
+  kanji: 鹿
 +FG:
   betza: WrlR
+  kanji: 羽
 +FC:
   betza: fbRWfF
+  kanji: 延
 +SW:
   betza: R
+  kanji: 行
 +SC:
   betza: fWB
+  kanji: 鷹
 +SO:
   betza: fbRfB3K
+  kanji: 鷲
 +LH:
   betza: ffbbN
+  kanji: 天
 +OC:
   betza: K
+  kanji: 牛
 
 # Tori shogi
 
 F':
   betza: FfrlW
+  kanji: 象
 C':
   betza: FfbW
+  kanji: 鶴
 P':
   betza: fDbF
+  kanji: 雉
 L':
   betza: fRbrBblF
+  kanji: 左
 R':
   betza: fRblBbrF
+  kanji: 右
 S':
   betza: fW
   flags:
     - max_2_per_file
     - no_drop_mate
+  kanji: 燕
 
 +F':
   betza: fBbRWbB2
+  kanji: 鵰
 +S':
   betza: fAbD
+  kanji: 鴈
 
 # Okisaki shogi
 
 Q':
   betza: Q
+  kanji: 妃
 N':
   betza: N
+  kanji: 跳
 A':
   betza: fbR
+  kanji: 反
 
 +N':
   betza: WfF
+  kanji: 今
 +A':
   betza: WfF
+  kanji: 仝

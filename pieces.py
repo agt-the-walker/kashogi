@@ -16,6 +16,7 @@ class Pieces:
             doc = yaml.load(stream)
 
         self._betza = {}
+        self._kanji = {}
         self._royal = set()
         self._no_drop_mate = set()
         self._max_per_file = {}
@@ -26,6 +27,8 @@ class Pieces:
                                       .format(abbrev))
 
             self._betza[abbrev] = Betza(info['betza'])
+            self._kanji[abbrev] = info['kanji']
+
             if 'flags' in info:
                 if self.is_promoted(abbrev):
                     raise PiecesException('Promoted piece {} cannot have flags'
@@ -71,6 +74,9 @@ class Pieces:
 
     def exist(self, abbrev):
         return abbrev in self._betza
+
+    def kanji(self, abbrev):
+        return self._kanji[abbrev]
 
     def can_promote(self, abbrev):
         return self.promoted(abbrev) in self._betza

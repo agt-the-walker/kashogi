@@ -2,7 +2,9 @@ P:
   betza: fW
   flags:
     - max_1_per_file
+  kanji: 例
 +P:
   betza: WfF
   flags:
     - max_2_per_file
+  kanji: 例
