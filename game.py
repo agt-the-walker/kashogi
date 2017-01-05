@@ -73,7 +73,8 @@ class Game:
         assert self._sfens[self._sfen][3] == self._half_moves
 
         return all(self._in_check[half_moves] for half_moves in
-                   range(self._sfens[self._sfen][2] - offset,
+                   range(self._sfens[self._sfen][2] - offset
+                                                    + self.NUM_PLAYERS,  # noqa
                          self._sfens[self._sfen][3] - offset
                                                     + self.NUM_PLAYERS,  # noqa
                          self.NUM_PLAYERS))

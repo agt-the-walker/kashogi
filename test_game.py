@@ -54,7 +54,7 @@ class PositionTestCase(unittest.TestCase):
             game.move((1, 3), (1, 2))
         self.assertEqual(game.result(), game.NUM_PLAYERS)
 
-    def test_game_win_by_fourfold_due_to_perpetual_check(self):
+    def test_game_win_due_to_perpetual_check(self):
         game = Game('1k1/2r/K2 w -', self._pieces, True)
         game.move((1, 2), (3, 2))
         for _ in range(3):
@@ -68,7 +68,7 @@ class PositionTestCase(unittest.TestCase):
             game.move((2, 2), (3, 2))
         self.assertEqual(game.result(), 0)
 
-    def test_game_loss_by_fourfold_due_to_perpetual_check(self):
+    def test_game_loss_due_to_perpetual_check(self):
         game = Game('2k/1R1/1K1 b -', self._pieces, True)
         for _ in range(3):
             self.assertIsNone(game.result())
@@ -79,6 +79,20 @@ class PositionTestCase(unittest.TestCase):
             game.move((1, 2), (2, 2))
             self.assertIsNone(game.result())
             game.move((2, 1), (1, 1))
+        self.assertEqual(game.result(), 1)
+
+    def test_game_loss_due_to_perpetual_check_during_last_repetition(self):
+        game = Game('2k1/1R2/2K1 b -', self._pieces, True)
+        for _ in range(2):
+            game.move((3, 2), (4, 2))
+            game.move((2, 1), (1, 1))
+            game.move((4, 2), (3, 2))
+            game.move((1, 1), (2, 1))
+        # no checks so far, let's give perpetual check now
+        game.move((3, 2), (2, 2))
+        game.move((2, 1), (3, 1))
+        game.move((2, 2), (3, 2))
+        game.move((3, 1), (2, 1))
         self.assertEqual(game.result(), 1)
 
 
