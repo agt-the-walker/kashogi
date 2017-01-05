@@ -73,6 +73,20 @@ class PiecesTestCase(unittest.TestCase):
         with self.assertRaisesRegex(PiecesException, 'Piece SR is a rider'):
             Pieces('support/is_rider.yaml')
 
+    def test_too_many_with_kanji(self):
+        with self.assertRaisesRegex(PiecesException,
+                                    'Too many pieces with kanji 鷹'):
+            Pieces('support/too_many_with_kanji.yaml')
+
+    def test_two_with_kanji(self):
+        with self.assertRaisesRegex(PiecesException, 'Two .* with kanji 鷹'):
+            Pieces('support/two_with_kanji.yaml')
+
+    def test_two_different_betza_for_kanji(self):
+        with self.assertRaisesRegex(PiecesException,
+                                    'Two different betza for kanji 羽'):
+            Pieces('support/two_different_betza_for_kanji.yaml')
+
 
 if __name__ == '__main__':
     unittest.main()

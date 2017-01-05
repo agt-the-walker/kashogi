@@ -4,6 +4,7 @@ import re
 import yaml
 
 from betza import Betza
+from collections import defaultdict
 
 
 class PiecesException(Exception):
@@ -43,6 +44,7 @@ class Pieces:
                         self._max_per_file[abbrev] = int(m.group(1))
 
         self._check_consistency()
+        self._check_kanjis()
 
     def _check_consistency(self):
         for abbrev, betza in self._betza.items():
@@ -71,6 +73,26 @@ class Pieces:
 
             elif betza.is_rider and self.no_drop_mate(abbrev):
                 raise PiecesException('Piece {} is a rider'.format(abbrev))
+
+    def _check_kanjis(self):
+        abbrevs = defaultdict(list)
+
+        for abbrev, kanji in self._kanji.items():
+            abbrevs[kanji].append(abbrev)
+
+        for kanji, abbrevs in abbrevs.items():
+            if len(abbrevs) > 2:
+                raise PiecesException('Too many pieces with kanji {}'
+                                      .format(kanji))
+            elif len(abbrevs) == 2:
+                if self.is_promoted(abbrevs[0]) == \
+                   self.is_promoted(abbrevs[1]):
+                    raise PiecesException('Two promoted or unpromoted pieces '
+                                          'with kanji {}'.format(kanji))
+                if self.directions(abbrevs[0]) != \
+                   self.directions(abbrevs[1]):
+                    raise PiecesException('Two different betza for kanji {}'
+                                          .format(kanji))
 
     def exist(self, abbrev):
         return abbrev in self._betza
