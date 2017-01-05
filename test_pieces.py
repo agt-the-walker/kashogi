@@ -78,9 +78,9 @@ class PiecesTestCase(unittest.TestCase):
                                     'Too many pieces with kanji 鷹'):
             Pieces('support/too_many_with_kanji.yaml')
 
-    def test_two_with_kanji(self):
+    def test_two_promoted_or_unpromoted_with_kanji(self):
         with self.assertRaisesRegex(PiecesException, 'Two .* with kanji 鷹'):
-            Pieces('support/two_with_kanji.yaml')
+            Pieces('support/two_promoted_or_unpromoted_with_kanji.yaml')
 
     def test_two_different_betza_for_kanji(self):
         with self.assertRaisesRegex(PiecesException,
