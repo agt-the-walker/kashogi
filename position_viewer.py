@@ -14,7 +14,11 @@ from position import Position
 BOARD_STROKE = 2
 LINE_STROKE = 1
 LINE_OFFSET = BOARD_STROKE - LINE_STROKE / 2
-SQUARE_SIZE = 40
+SQUARE_SIZE = 39  # preferably odd to center text correctly
+
+LABEL_SIZE = 16
+FILE_LABEL_OFFSET = 7
+FILE_LABEL_HEIGHT = LABEL_SIZE + FILE_LABEL_OFFSET
 
 
 class PositionView(QWebEngineView):
@@ -44,18 +48,34 @@ class PositionView(QWebEngineView):
             "body {\n"
             "  margin: 0;\n"
             "}\n"
+            "text {\n"
+            "  text-anchor: middle;\n"
+            "}\n"
             "#board {\n"
             "  fill: none;\n"
             "  stroke: black;\n"
             "}\n"))
 
+        self._draw_board_labels(dwg)
         self._draw_board(dwg)
+
         return dwg.tostring()
+
+    def _draw_board_labels(self, dwg):
+        pos = self._position
+
+        for i in range(pos.num_files):
+            file = pos.num_files - i if pos.player_to_move == 0 else i+1
+            dwg.add(dwg.text(file,
+                             insert=(LINE_OFFSET + (i + 0.5) * SQUARE_SIZE,
+                                     LABEL_SIZE)))
 
     def _draw_board(self, dwg):
         position = self._position
 
-        b = dwg.g(id='board')
+        b = dwg.g(id='board',
+                  transform='translate(0, {})'.format(FILE_LABEL_HEIGHT))
+
         b.add(dwg.rect((BOARD_STROKE / 2, BOARD_STROKE / 2),
                        ((SQUARE_SIZE * position.num_files +
                          BOARD_STROKE - LINE_STROKE),
@@ -85,7 +105,7 @@ class PositionView(QWebEngineView):
 
     def _board_height(self):
         return SQUARE_SIZE * self._position.num_ranks + BOARD_STROKE * 2 \
-               - LINE_STROKE
+               - LINE_STROKE + FILE_LABEL_HEIGHT
 
 
 if __name__ == '__main__':
