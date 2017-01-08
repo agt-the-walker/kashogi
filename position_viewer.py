@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import signal
+import svgwrite
 import sys
 
 from PyQt5.QtCore import pyqtSlot
@@ -37,68 +38,46 @@ class PositionView(QWebEngineView):
                     zoom_level * self._board_height())
 
     def _position_to_svg(self):
-        fragments = []
+        dwg = svgwrite.Drawing(viewBox='0 0 {} {}'.format(
+                self._board_width(), self._board_height()))
+        dwg.add(dwg.style(
+            "body {\n"
+            "  margin: 0;\n"
+            "}\n"
+            "#board {\n"
+            "  fill: none;\n"
+            "  stroke: black;\n"
+            "}\n"))
 
-        fragments.append("""
-<svg width="100%" height="100%" viewBox="0 0 {} {}"
-     xmlns="http://www.w3.org/2000/svg">
-        """.format(self._board_width(), self._board_height()))
+        self._draw_board(dwg)
+        return dwg.tostring()
 
-        fragments.append("""
-  <style text="text/css"><![CDATA[
-    body {
-      margin: 0;
-    }
-    #board {
-      fill: none;
-      stroke: black;
-    }
-  ]]></style>
-  <g id="board">
-        """)
-
-        fragments.append(self._board_to_svg())
-        fragments.append("""
-  </g>
-</svg>
-        """)
-
-        return ''.join(fragments)
-
-    def _board_to_svg(self):
+    def _draw_board(self, dwg):
         position = self._position
 
-        fragments = []
-
-        fragments.append("""
-    <rect x="{}" y="{}" width="{}" height="{}" stroke-width="{}"/>
-        """.format(BOARD_STROKE / 2,
-                   BOARD_STROKE / 2,
-                   (SQUARE_SIZE * position.num_files +
-                    BOARD_STROKE - LINE_STROKE),
-                   (SQUARE_SIZE * position.num_ranks +
-                    BOARD_STROKE - LINE_STROKE),
-                   BOARD_STROKE))
+        b = dwg.g(id='board')
+        b.add(dwg.rect((BOARD_STROKE / 2, BOARD_STROKE / 2),
+                       ((SQUARE_SIZE * position.num_files +
+                         BOARD_STROKE - LINE_STROKE),
+                        (SQUARE_SIZE * position.num_ranks +
+                         BOARD_STROKE - LINE_STROKE)),
+                       stroke_width=BOARD_STROKE))
 
         for file in range(1, position.num_files):
-            fragments.append("""
-    <line x1="{}" y1="{}" x2="{}" y2="{}" stroke-width="{}"/>
-            """.format(LINE_OFFSET + SQUARE_SIZE * file,
-                       LINE_OFFSET,
-                       LINE_OFFSET + SQUARE_SIZE * file,
-                       LINE_OFFSET + SQUARE_SIZE * position.num_ranks,
-                       LINE_STROKE))
+            b.add(dwg.line((LINE_OFFSET + SQUARE_SIZE * file,
+                            LINE_OFFSET),
+                           (LINE_OFFSET + SQUARE_SIZE * file,
+                            LINE_OFFSET + SQUARE_SIZE * position.num_ranks),
+                           stroke_width=LINE_STROKE))
 
         for rank in range(1, position.num_ranks):
-            fragments.append("""
-    <line x1="{}" y1="{}" x2="{}" y2="{}" stroke-width="{}"/>
-            """.format(LINE_OFFSET,
-                       LINE_OFFSET + SQUARE_SIZE * rank,
-                       LINE_OFFSET + SQUARE_SIZE * position.num_files,
-                       LINE_OFFSET + SQUARE_SIZE * rank,
-                       LINE_STROKE))
+            b.add(dwg.line((LINE_OFFSET,
+                            LINE_OFFSET + SQUARE_SIZE * rank),
+                           (LINE_OFFSET + SQUARE_SIZE * position.num_files,
+                            LINE_OFFSET + SQUARE_SIZE * rank),
+                           stroke_width=LINE_STROKE))
 
-        return '\n'.join(fragments)
+        dwg.add(b)
 
     def _board_width(self):
         return SQUARE_SIZE * self._position.num_files + BOARD_STROKE * 2 \
