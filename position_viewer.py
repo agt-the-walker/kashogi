@@ -10,6 +10,7 @@ from PyQt5.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, \
 
 from pieces import Pieces
 from position import Position
+from string import ascii_lowercase
 
 BOARD_STROKE = 2
 LINE_STROKE = 1
@@ -18,11 +19,15 @@ SQUARE_SIZE = 39  # preferably odd to center text correctly
 
 LABEL_SIZE = 12
 FILE_LABEL_OFFSET = 8
+RANK_LABEL_OFFSET = 6
 
 
 class PositionScene(QGraphicsScene):
     def __init__(self, position):
         super().__init__()
+
+        if position.num_ranks > len(ascii_lowercase):
+            raise ValueError('Too many ranks in position for GUI')
 
         self._draw_board(position)
         self._draw_board_labels(position)
@@ -39,6 +44,18 @@ class PositionScene(QGraphicsScene):
             text.setPos(LINE_OFFSET + (i + 0.5) * SQUARE_SIZE
                         - text.boundingRect().width() / 2,
                         - FILE_LABEL_OFFSET - LABEL_SIZE)
+
+            self.addItem(text)
+
+        for i in range(pos.num_ranks):
+            rank = pos.num_ranks - i if pos.player_to_move == 1 else i+1
+
+            text = QGraphicsSimpleTextItem(chr(ord('a') + rank - 1))
+            text.setFont(font)
+            text.setPos(SQUARE_SIZE * pos.num_files + 2 * LINE_OFFSET +
+                        RANK_LABEL_OFFSET,
+                        LINE_OFFSET + (i + 0.5) * SQUARE_SIZE
+                        - text.boundingRect().height() / 2)
 
             self.addItem(text)
 
