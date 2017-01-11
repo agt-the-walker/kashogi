@@ -90,10 +90,11 @@ class PositionView(QGraphicsView):
         self.setFrameStyle(0)
 
     def keyPressEvent(self, event):
-        zoom_level = int(event.text())
-        if zoom_level > 0:
-            self.resize(self.scene().width() * zoom_level,
-                        self.scene().height() * zoom_level)
+        if event.text().isdigit():
+            zoom_level = int(event.text())
+            if zoom_level > 0:
+                self.resize(self.scene().width() * zoom_level,
+                            self.scene().height() * zoom_level)
 
     def resizeEvent(self, event):
         self.fitInView(self.scene().sceneRect(), Qt.KeepAspectRatio)
