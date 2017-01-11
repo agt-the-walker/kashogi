@@ -77,8 +77,7 @@ class PositionScene(QGraphicsScene):
                          pen)
 
         for rank in range(1, pos.num_ranks):
-            self.addLine(LINE_OFFSET,
-                         LINE_OFFSET + SQUARE_SIZE * rank,
+            self.addLine(LINE_OFFSET, LINE_OFFSET + SQUARE_SIZE * rank,
                          LINE_OFFSET + SQUARE_SIZE * pos.num_files,
                          LINE_OFFSET + SQUARE_SIZE * rank,
                          pen)
