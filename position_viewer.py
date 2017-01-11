@@ -4,7 +4,7 @@ import signal
 import sys
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont, QPen
+from PyQt5.QtGui import QFont, QFontMetrics, QPen
 from PyQt5.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, \
                             QGraphicsSimpleTextItem
 
@@ -17,9 +17,10 @@ LINE_STROKE = 1
 LINE_OFFSET = BOARD_STROKE - LINE_STROKE / 2
 SQUARE_SIZE = 39  # preferably odd to center text correctly
 
+LABEL_FONT = 'Sans'
 LABEL_SIZE = 12
 FILE_LABEL_OFFSET = 8
-RANK_LABEL_OFFSET = 6
+RANK_LABEL_OFFSET = 4
 
 
 class PositionScene(QGraphicsScene):
@@ -29,12 +30,14 @@ class PositionScene(QGraphicsScene):
         if position.num_ranks > len(ascii_lowercase):
             raise ValueError('Too many ranks in position for GUI')
 
-        self._draw_board(position)
         self._draw_board_labels(position)
+        self._draw_board(position)
 
     def _draw_board_labels(self, pos):
-        font = QFont()
+        font = QFont(LABEL_FONT)
         font.setPointSize(LABEL_SIZE)
+
+        self._compute_lowercase_max_width(font)
 
         for i in range(pos.num_files):
             file = pos.num_files - i if pos.player_to_move == 0 else i+1
@@ -53,11 +56,16 @@ class PositionScene(QGraphicsScene):
             text = QGraphicsSimpleTextItem(chr(ord('a') + rank - 1))
             text.setFont(font)
             text.setPos(SQUARE_SIZE * pos.num_files + 2 * LINE_OFFSET +
-                        RANK_LABEL_OFFSET,
+                        RANK_LABEL_OFFSET +
+                        (self._max_width - text.boundingRect().width()) / 2,
                         LINE_OFFSET + (i + 0.5) * SQUARE_SIZE
                         - text.boundingRect().height() / 2)
 
             self.addItem(text)
+
+    def _compute_lowercase_max_width(self, font):
+        fm = QFontMetrics(font)
+        self._max_width = max([fm.width(letter) for letter in ascii_lowercase])
 
     def _draw_board(self, pos):
         pen = QPen()
@@ -111,5 +119,6 @@ if __name__ == '__main__':
 
     position = Position(sys.argv[1], Pieces())
     view = PositionView(PositionScene(position))
+
     view.show()
     sys.exit(app.exec_())
