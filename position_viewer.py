@@ -26,80 +26,97 @@ RANK_LABEL_OFFSET = 4
 class PositionScene(QGraphicsScene):
     def __init__(self, position):
         super().__init__()
+        self.bottom_player = position.player_to_move
 
         if position.num_ranks > len(ascii_lowercase):
             raise ValueError('Too many ranks in position for GUI')
 
-        self._draw_board(position)
-        self._draw_board_labels(position)
+        self._position = position
+        self._draw_board()
+        self._redraw_board_labels()
 
-    def _draw_board_labels(self, pos):
+    def flip_view(self):
+        self.bottom_player = Position.NUM_PLAYERS - self.bottom_player - 1
+
+        self.removeItem(self._file_labels)
+        self.removeItem(self._rank_labels)
+
+        self._redraw_board_labels()
+
+    def _redraw_board_labels(self):
         font = QFont(LABEL_FONT)
         font.setPointSize(LABEL_SIZE)
 
         self._compute_lowercase_max_width(font)
 
-        file_labels = QGraphicsItemGroup()
-        rank_labels = QGraphicsItemGroup()
+        self._file_labels = QGraphicsItemGroup()
+        self._rank_labels = QGraphicsItemGroup()
 
-        for i in range(pos.num_files):
-            file = pos.num_files - i if pos.player_to_move == 0 else i+1
+        position = self._position
+
+        for i in range(position.num_files):
+            file = position.num_files - i if self.bottom_player == 0 else i+1
 
             text = QGraphicsSimpleTextItem(str(file))
             text.setFont(font)
             text.setPos(i * SQUARE_SIZE - text.boundingRect().width() / 2, 0)
 
-            file_labels.addToGroup(text)
+            self._file_labels.addToGroup(text)
 
-        file_labels.setPos(LINE_OFFSET + 0.5 * SQUARE_SIZE,
-                           - FILE_LABEL_OFFSET - LABEL_SIZE)
+        self._file_labels.setPos(LINE_OFFSET + 0.5 * SQUARE_SIZE,
+                                 - FILE_LABEL_OFFSET - LABEL_SIZE)
 
-        for i in range(pos.num_ranks):
-            rank = pos.num_ranks - i if pos.player_to_move == 1 else i+1
+        for i in range(position.num_ranks):
+            rank = position.num_ranks - i if self.bottom_player == 1 else i+1
 
             text = QGraphicsSimpleTextItem(chr(ord('a') + rank - 1))
             text.setFont(font)
             text.setPos((self._max_width - text.boundingRect().width()) / 2,
                         i * SQUARE_SIZE - text.boundingRect().height() / 2)
 
-            rank_labels.addToGroup(text)
+            self._rank_labels.addToGroup(text)
 
-        rank_labels.setPos(self._board.boundingRect().width()
-                           + RANK_LABEL_OFFSET,
-                           LINE_OFFSET + 0.5 * SQUARE_SIZE)
+        self._rank_labels.setPos(self._board.boundingRect().width()
+                                 + RANK_LABEL_OFFSET,
+                                 LINE_OFFSET + 0.5 * SQUARE_SIZE)
 
-        self.addItem(file_labels)
-        self.addItem(rank_labels)
+        self.addItem(self._file_labels)
+        self.addItem(self._rank_labels)
 
     def _compute_lowercase_max_width(self, font):
+        if hasattr(self, '_max_width'):
+            return
+
         fm = QFontMetrics(font)
         self._max_width = max([fm.width(letter) for letter in ascii_lowercase])
 
-    def _draw_board(self, pos):
+    def _draw_board(self):
         board = QGraphicsItemGroup()
 
         pen = QPen()
         pen.setWidth(BOARD_STROKE)
 
+        position = self._position
+
         board.addToGroup(self.addRect(
             BOARD_STROKE / 2, BOARD_STROKE / 2,
-            SQUARE_SIZE * pos.num_files + BOARD_STROKE - LINE_STROKE,
-            SQUARE_SIZE * pos.num_ranks + BOARD_STROKE - LINE_STROKE,
+            SQUARE_SIZE * position.num_files + BOARD_STROKE - LINE_STROKE,
+            SQUARE_SIZE * position.num_ranks + BOARD_STROKE - LINE_STROKE,
             pen))
 
         pen.setWidth(LINE_STROKE)
 
-        for file in range(1, pos.num_files):
+        for file in range(1, position.num_files):
             board.addToGroup(self.addLine(
                 LINE_OFFSET + SQUARE_SIZE * file, LINE_OFFSET,
                 LINE_OFFSET + SQUARE_SIZE * file,
-                LINE_OFFSET + SQUARE_SIZE * pos.num_ranks,
+                LINE_OFFSET + SQUARE_SIZE * position.num_ranks,
                 pen))
 
-        for rank in range(1, pos.num_ranks):
+        for rank in range(1, position.num_ranks):
             board.addToGroup(self.addLine(
                 LINE_OFFSET, LINE_OFFSET + SQUARE_SIZE * rank,
-                LINE_OFFSET + SQUARE_SIZE * pos.num_files,
+                LINE_OFFSET + SQUARE_SIZE * position.num_files,
                 LINE_OFFSET + SQUARE_SIZE * rank,
                 pen))
 
@@ -118,6 +135,8 @@ class PositionView(QGraphicsView):
             if zoom_level > 0:
                 self.resize(self.scene().width() * zoom_level,
                             self.scene().height() * zoom_level)
+        elif event.text() == 'f':
+            self.scene().flip_view()
 
     def resizeEvent(self, event):
         self.fitInView(self.scene().sceneRect(), Qt.KeepAspectRatio)
