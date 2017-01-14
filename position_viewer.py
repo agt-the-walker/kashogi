@@ -35,8 +35,23 @@ class PositionScene(QGraphicsScene):
         self._draw_board()
         self._redraw_board_labels()
 
+        self._has_board_labels = True
+
+    def toggle_board_labels(self):
+        if self._has_board_labels:
+            self.removeItem(self._file_labels)
+            self.removeItem(self._rank_labels)
+        else:
+            self._redraw_board_labels()
+
+        self._has_board_labels = not self._has_board_labels
+        self.setSceneRect(self.itemsBoundingRect())
+
     def flip_view(self):
         self.bottom_player = Position.NUM_PLAYERS - self.bottom_player - 1
+
+        if not self._has_board_labels:
+            return
 
         self.removeItem(self._file_labels)
         self.removeItem(self._rank_labels)
@@ -132,7 +147,13 @@ class PositionView(QGraphicsView):
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setRenderHint(QPainter.Antialiasing)
-        self.setFixedSize(self.scene().width(), self.scene().height())
+        self._resize(1)
+
+    def _resize(self, zoom_level=None):
+        if zoom_level:
+            self._zoom_level = zoom_level
+        self.setFixedSize(self._zoom_level * self.scene().width(),
+                          self._zoom_level * self.scene().height())
 
     def keyPressEvent(self, event):
         if event.text().isdigit():
@@ -140,10 +161,12 @@ class PositionView(QGraphicsView):
             if zoom_level > 0:
                 t = QTransform.fromScale(zoom_level, zoom_level)
                 self.setTransform(t)
-                self.setFixedSize(zoom_level * self.scene().width(),
-                                  zoom_level * self.scene().height())
+                self._resize(zoom_level)
         elif event.text() == 'f':
             self.scene().flip_view()
+        elif event.text() == 'l':
+            self.scene().toggle_board_labels()
+            self._resize()
 
 
 if __name__ == '__main__':
