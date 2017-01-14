@@ -4,7 +4,7 @@ import signal
 import sys
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont, QFontMetrics, QPen
+from PyQt5.QtGui import QFont, QFontMetrics, QPainter, QPen, QTransform
 from PyQt5.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, \
                             QGraphicsSimpleTextItem, QGraphicsItemGroup
 
@@ -127,20 +127,23 @@ class PositionScene(QGraphicsScene):
 class PositionView(QGraphicsView):
     def __init__(self, scene):
         super().__init__(scene)
+
         self.setFrameStyle(0)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setRenderHint(QPainter.Antialiasing)
+        self.setFixedSize(self.scene().width(), self.scene().height())
 
     def keyPressEvent(self, event):
         if event.text().isdigit():
             zoom_level = int(event.text())
             if zoom_level > 0:
-                self.resize(self.scene().width() * zoom_level,
-                            self.scene().height() * zoom_level)
+                t = QTransform.fromScale(zoom_level, zoom_level)
+                self.setTransform(t)
+                self.setFixedSize(zoom_level * self.scene().width(),
+                                  zoom_level * self.scene().height())
         elif event.text() == 'f':
             self.scene().flip_view()
-
-    def resizeEvent(self, event):
-        self.fitInView(self.scene().sceneRect(), Qt.KeepAspectRatio)
-        super().resizeEvent(event)
 
 
 if __name__ == '__main__':
