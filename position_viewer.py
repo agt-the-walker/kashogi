@@ -17,8 +17,9 @@ LINE_STROKE = 1
 LINE_OFFSET = BOARD_STROKE - LINE_STROKE / 2
 SQUARE_SIZE = 39  # preferably odd to center text correctly
 
-PIECES_FONT = 'Sans'
-PIECES_SIZE = 32
+PIECE_FONT = 'Sans'
+PIECE_SIZE = 32
+PIECE_OFFSET = 1
 
 LABEL_FONT = 'Sans'
 LABEL_SIZE = 16
@@ -116,8 +117,8 @@ class PositionScene(QGraphicsScene):
                                      for letter in ascii_lowercase])
 
     def _redraw_board_pieces(self):
-        font = QFont(PIECES_FONT)
-        font.setPixelSize(PIECES_SIZE)
+        font = QFont(PIECE_FONT)
+        font.setPixelSize(PIECE_SIZE)
 
         self._board_pieces = QGraphicsItemGroup()
 
@@ -145,9 +146,11 @@ class PositionScene(QGraphicsScene):
             text.setBrush(QBrush(Qt.red))
 
         player = 0 if abbrev == piece else 1
+        piece_offset = PIECE_OFFSET
         if player != self.bottom_player:
             text.setTransformOriginPoint(text.boundingRect().center())
             text.setRotation(180)
+            piece_offset = -piece_offset
 
         file, rank = square
         x = position.num_files - file if self.bottom_player == 0 else file-1
@@ -155,7 +158,7 @@ class PositionScene(QGraphicsScene):
 
         text.setPos(LINE_OFFSET + (x + 0.5) * SQUARE_SIZE
                     - text.boundingRect().width() / 2,
-                    LINE_OFFSET + (y + 0.5) * SQUARE_SIZE
+                    LINE_OFFSET + (y + 0.5) * SQUARE_SIZE + piece_offset
                     - text.boundingRect().height() / 2)
 
         self._board_pieces.addToGroup(text)
