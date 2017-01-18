@@ -359,6 +359,12 @@ class PositionTestCase(unittest.TestCase):
         self.assertEqual(str(position), '2k/1s1/K2 b 2s')
         self.assertEqual(position.status(), 'check')
 
+    def test_drop_with_new_directions(self):
+        position = self.check('1k1/3/3/3/K2 b N', 3, 5)
+        position.drop('N', (1, 3))
+        self.assertEqual(str(position), '1k1/3/2N/3/K2 w -')
+        self.assertEqual(position.status(), 'check')
+
     def test_king_move(self):
         position = self.check('1k1/2P/1K1 b P')
 

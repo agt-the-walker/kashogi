@@ -141,6 +141,9 @@ class Position:
             if self._pieces.is_royal(abbrev):
                 raise ValueError('Royal piece in hand: {}'.format(piece))
 
+            self._all_coordinates.update(
+                    self._pieces.directions(abbrev).keys())
+
             player = 0 if abbrev == piece else 1
             number = int(number) if number.isdigit() else 1
             self._hands[player][abbrev] += number
