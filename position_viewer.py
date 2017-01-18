@@ -18,8 +18,8 @@ LINE_OFFSET = BOARD_STROKE - LINE_STROKE / 2
 SQUARE_SIZE = 39  # preferably odd to center text correctly
 
 LABEL_FONT = 'Sans'
-LABEL_SIZE = 12
-FILE_LABEL_OFFSET = 8
+LABEL_SIZE = 16
+FILE_LABEL_OFFSET = 6
 RANK_LABEL_OFFSET = 4
 
 
@@ -60,7 +60,7 @@ class PositionScene(QGraphicsScene):
 
     def _redraw_board_labels(self):
         font = QFont(LABEL_FONT)
-        font.setPointSize(LABEL_SIZE)
+        font.setPixelSize(LABEL_SIZE)
 
         self._compute_lowercase_max_width(font)
 
