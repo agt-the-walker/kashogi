@@ -4,7 +4,7 @@ import signal
 import sys
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont, QFontMetrics, QPainter, QPen, QTransform
+from PyQt5.QtGui import QBrush, QFont, QFontMetrics, QPainter, QPen, QTransform
 from PyQt5.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, \
                             QGraphicsSimpleTextItem, QGraphicsItemGroup
 
@@ -17,6 +17,9 @@ LINE_STROKE = 1
 LINE_OFFSET = BOARD_STROKE - LINE_STROKE / 2
 SQUARE_SIZE = 39  # preferably odd to center text correctly
 
+PIECES_FONT = 'Sans'
+PIECES_SIZE = 32
+
 LABEL_FONT = 'Sans'
 LABEL_SIZE = 16
 FILE_LABEL_OFFSET = 6
@@ -28,11 +31,14 @@ class PositionScene(QGraphicsScene):
         super().__init__()
         self.bottom_player = position.player_to_move
 
+        if not position.all_pieces:
+            raise ValueError('No pieces on board or hand')
         if position.num_ranks > len(ascii_lowercase):
             raise ValueError('Too many ranks in position for GUI')
 
         self._position = position
         self._draw_board()
+        self._redraw_board_pieces()
         self._redraw_board_labels()
 
         self._has_board_labels = True
@@ -55,14 +61,16 @@ class PositionScene(QGraphicsScene):
 
         self.removeItem(self._file_labels)
         self.removeItem(self._rank_labels)
-
         self._redraw_board_labels()
+
+        self.removeItem(self._board_pieces)
+        self._redraw_board_pieces()
 
     def _redraw_board_labels(self):
         font = QFont(LABEL_FONT)
         font.setPixelSize(LABEL_SIZE)
 
-        self._compute_lowercase_max_width(font)
+        self._compute_max_label_width(font)
 
         self._file_labels = QGraphicsItemGroup()
         self._rank_labels = QGraphicsItemGroup()
@@ -86,7 +94,8 @@ class PositionScene(QGraphicsScene):
 
             text = QGraphicsSimpleTextItem(chr(ord('a') + rank - 1))
             text.setFont(font)
-            text.setPos((self._max_width - text.boundingRect().width()) / 2,
+            text.setPos((self._max_label_width
+                         - text.boundingRect().width()) / 2,
                         i * SQUARE_SIZE - text.boundingRect().height() / 2)
 
             self._rank_labels.addToGroup(text)
@@ -98,12 +107,58 @@ class PositionScene(QGraphicsScene):
         self.addItem(self._file_labels)
         self.addItem(self._rank_labels)
 
-    def _compute_lowercase_max_width(self, font):
-        if hasattr(self, '_max_width'):
+    def _compute_max_label_width(self, font):
+        if hasattr(self, '_max_label_width'):
             return
 
         fm = QFontMetrics(font)
-        self._max_width = max([fm.width(letter) for letter in ascii_lowercase])
+        self._max_label_width = max([fm.width(letter)
+                                     for letter in ascii_lowercase])
+
+    def _redraw_board_pieces(self):
+        font = QFont(PIECES_FONT)
+        font.setPixelSize(PIECES_SIZE)
+
+        self._board_pieces = QGraphicsItemGroup()
+
+        position = self._position
+
+        for file in range(1, position.num_files+1):
+            for rank in range(1, position.num_ranks+1):
+                square = ((file, rank))
+                piece = position.get(square)
+                if piece:
+                    self._draw_board_piece(font, piece, square)
+
+        self.addItem(self._board_pieces)
+
+    def _draw_board_piece(self, font, piece, square):
+        position = self._position
+
+        abbrev = piece.upper()
+        kanji = position.pieces.kanji(abbrev)
+
+        text = QGraphicsSimpleTextItem(kanji)
+        text.setFont(font)
+
+        if position.pieces.is_promoted(abbrev):
+            text.setBrush(QBrush(Qt.red))
+
+        player = 0 if abbrev == piece else 1
+        if player != self.bottom_player:
+            text.setTransformOriginPoint(text.boundingRect().center())
+            text.setRotation(180)
+
+        file, rank = square
+        x = position.num_files - file if self.bottom_player == 0 else file-1
+        y = position.num_ranks - rank if self.bottom_player == 1 else rank-1
+
+        text.setPos(LINE_OFFSET + (x + 0.5) * SQUARE_SIZE
+                    - text.boundingRect().width() / 2,
+                    LINE_OFFSET + (y + 0.5) * SQUARE_SIZE
+                    - text.boundingRect().height() / 2)
+
+        self._board_pieces.addToGroup(text)
 
     def _draw_board(self):
         board = QGraphicsItemGroup()

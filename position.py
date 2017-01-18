@@ -35,12 +35,20 @@ class Position:
             self._piece_giving_check_to(self._player_to_move)
 
     @property
+    def pieces(self):
+        return self._pieces
+
+    @property
     def num_ranks(self):
         return self._num_ranks
 
     @property
     def num_files(self):
         return self._num_files
+
+    @property
+    def all_pieces(self):
+        return self._all_pieces
 
     @property
     def player_to_move(self):
@@ -68,6 +76,8 @@ class Position:
                              self.MIN_SIZE))
 
         self._all_coordinates = set()
+        self._all_pieces = set()
+
         self._num_files = 0
         self._royal_squares = [None] * self.NUM_PLAYERS
 
@@ -128,7 +138,7 @@ class Position:
               self._promotion_zone_height()):
             raise ValueError('Promotion zone too small for {}'.format(abbrev))
 
-        self._all_coordinates.update(self._pieces.directions(abbrev).keys())
+        self._remember_piece(abbrev)
         self._board[(file, rank)] = piece
 
     def _parse_hands(self, sfen_hands):
@@ -141,12 +151,15 @@ class Position:
             if self._pieces.is_royal(abbrev):
                 raise ValueError('Royal piece in hand: {}'.format(piece))
 
-            self._all_coordinates.update(
-                    self._pieces.directions(abbrev).keys())
+            self._remember_piece(abbrev)
 
             player = 0 if abbrev == piece else 1
             number = int(number) if number.isdigit() else 1
             self._hands[player][abbrev] += number
+
+    def _remember_piece(self, abbrev):
+        self._all_coordinates.update(self._pieces.directions(abbrev).keys())
+        self._all_pieces.add(abbrev)
 
     def _verify_opponent_not_in_check(self):
         opponent = self.NUM_PLAYERS - self._player_to_move - 1

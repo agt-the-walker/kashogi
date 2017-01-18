@@ -17,6 +17,7 @@ class PositionTestCase(unittest.TestCase):
                'LN2+p3L w Sbgn3p'
         # we ignore move count, etc.
         position = self.check(sfen + ' 124', 9, 9, sfen)
+        self.assertEqual(position.pieces, self._pieces)
         self.assertEqual(position.player_to_move, 1)
         self.assertEqual(position.get((2, 8)), '+r')
         self.assertEqual(position.in_hand(1), {'B': 1, 'G': 1, 'N': 1, 'P': 3})
@@ -361,6 +362,7 @@ class PositionTestCase(unittest.TestCase):
 
     def test_drop_with_new_directions(self):
         position = self.check('1k1/3/3/3/K2 b N', 3, 5)
+        self.assertEqual(position.all_pieces, {'K', 'N'})
         position.drop('N', (1, 3))
         self.assertEqual(str(position), '1k1/3/2N/3/K2 w -')
         self.assertEqual(position.status(), 'check')
