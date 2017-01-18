@@ -299,8 +299,8 @@ class PositionTestCase(unittest.TestCase):
         self.check("R'2/3/2k b -")   # L-R swapped
 
     def test_tori_wa_pieces_on_narrow_board(self):
-        self.check("k/p'p'sc@/p'1P'/P'P'SC@/K b RFF@11SC@p1n'p'2rr@", 3, 5,
-                   "k2/p'p'sc@/p'1P'/P'P'SC@/K2 b RFF@11SC@pn'p'2rr@",
+        self.check("k/p'p'sc@/p'1P'/P'P'SC@/K b FF@11SC@Rn'p'2rr@p1", 3, 5,
+                   "k2/p'p'sc@/p'1P'/P'P'SC@/K2 b FF@11SC@Rn'p'2rr@p",
                    expected_status='check')
 
     def test_promotion_choices_for_black(self):

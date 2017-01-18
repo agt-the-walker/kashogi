@@ -504,13 +504,13 @@ class Position:
         buffer = ''
 
         for player in range(self.NUM_PLAYERS):
-            # output standard shogi pieces in traditional order
-            for abbrev in self.STANDARD_HAND_ORDER:
-                buffer += self._sfen_piece_in_hand(player, abbrev)
-
-            # ...then output remaining pieces in alphabetical order
+            # output non-standard shogi pieces in alphabetical order
             for abbrev in sorted(self._hands[player].keys() -
                                  self.STANDARD_HAND_ORDER):
+                buffer += self._sfen_piece_in_hand(player, abbrev)
+
+            # ...then output standard shogi pieces in traditional order
+            for abbrev in self.STANDARD_HAND_ORDER:
                 buffer += self._sfen_piece_in_hand(player, abbrev)
 
         return buffer if buffer else '-'
