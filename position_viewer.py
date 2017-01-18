@@ -32,8 +32,6 @@ class PositionScene(QGraphicsScene):
         super().__init__()
         self.bottom_player = position.player_to_move
 
-        if not position.all_pieces:
-            raise ValueError('No pieces on board or hand')
         if position.num_ranks > len(ascii_lowercase):
             raise ValueError('Too many ranks in position for GUI')
 

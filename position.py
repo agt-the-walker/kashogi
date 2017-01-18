@@ -47,8 +47,8 @@ class Position:
         return self._num_files
 
     @property
-    def all_pieces(self):
-        return self._all_pieces
+    def droppable_pieces(self):
+        return self._droppable_pieces
 
     @property
     def player_to_move(self):
@@ -76,7 +76,7 @@ class Position:
                              self.MIN_SIZE))
 
         self._all_coordinates = set()
-        self._all_pieces = set()
+        self._droppable_pieces = set()
 
         self._num_files = 0
         self._royal_squares = [None] * self.NUM_PLAYERS
@@ -159,7 +159,10 @@ class Position:
 
     def _remember_piece(self, abbrev):
         self._all_coordinates.update(self._pieces.directions(abbrev).keys())
-        self._all_pieces.add(abbrev)
+        if not self._pieces.is_royal(abbrev):
+            if self._pieces.is_promoted(abbrev):
+                abbrev = self._pieces.unpromoted(abbrev)
+            self._droppable_pieces.add(abbrev)
 
     def _verify_opponent_not_in_check(self):
         opponent = self.NUM_PLAYERS - self._player_to_move - 1

@@ -18,6 +18,8 @@ class PositionTestCase(unittest.TestCase):
         # we ignore move count, etc.
         position = self.check(sfen + ' 124', 9, 9, sfen)
         self.assertEqual(position.pieces, self._pieces)
+        self.assertEqual(position.droppable_pieces,
+                         set(position.STANDARD_HAND_ORDER))
         self.assertEqual(position.player_to_move, 1)
         self.assertEqual(position.get((2, 8)), '+r')
         self.assertEqual(position.in_hand(1), {'B': 1, 'G': 1, 'N': 1, 'P': 3})
@@ -299,9 +301,12 @@ class PositionTestCase(unittest.TestCase):
         self.check("R'2/3/2k b -")   # L-R swapped
 
     def test_tori_wa_pieces_on_narrow_board(self):
-        self.check("k/p'p'sc@/p'1P'/P'P'SC@/K b FF@11SC@Rn'p'2rr@p1", 3, 5,
-                   "k2/p'p'sc@/p'1P'/P'P'SC@/K2 b FF@11SC@Rn'p'2rr@p",
-                   expected_status='check')
+        position = self.check(
+                "k/p'p'sc@/p'1P'/P'P'SC@/K b FF@11SC@Rn'p'2rr@p1", 3, 5,
+                "k2/p'p'sc@/p'1P'/P'P'SC@/K2 b FF@11SC@Rn'p'2rr@p",
+                expected_status='check')
+        self.assertEqual(position.droppable_pieces,
+                         {'FF', "N'", "P'", 'RR', 'SC', 'R', 'P'})
 
     def test_promotion_choices_for_black(self):
         position = self.check('2k/P2/S1P/NP+B/2N/1N1/G2/3/1K1 b -', 3, 9)
@@ -362,7 +367,7 @@ class PositionTestCase(unittest.TestCase):
 
     def test_drop_with_new_directions(self):
         position = self.check('1k1/3/3/3/K2 b N', 3, 5)
-        self.assertEqual(position.all_pieces, {'K', 'N'})
+        self.assertEqual(position.droppable_pieces, {'N'})
         position.drop('N', (1, 3))
         self.assertEqual(str(position), '1k1/3/2N/3/K2 w -')
         self.assertEqual(position.status(), 'check')
