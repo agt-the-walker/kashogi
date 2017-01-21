@@ -55,15 +55,15 @@ class PositionScene(QGraphicsScene):
     def flip_view(self):
         self.bottom_player = Position.NUM_PLAYERS - self.bottom_player - 1
 
+        self.removeItem(self._board_pieces)
+        self._redraw_board_pieces()
+
         if not self._has_board_labels:
             return
 
         self.removeItem(self._file_labels)
         self.removeItem(self._rank_labels)
         self._redraw_board_labels()
-
-        self.removeItem(self._board_pieces)
-        self._redraw_board_pieces()
 
     def _redraw_board_labels(self):
         font = QFont(LABEL_FONT)
