@@ -31,6 +31,8 @@ class Position:
         self._hands = [Counter() for count in range(self.NUM_PLAYERS)]
         self._parse_hands(m.group(3))
 
+        self._update_droppable_pieces()
+
         self._checking_piece = \
             self._piece_giving_check_to(self._player_to_move)
 
@@ -76,7 +78,7 @@ class Position:
                              self.MIN_SIZE))
 
         self._all_coordinates = set()
-        self._droppable_pieces = set()
+        self._droppable_pieces = set()  # later transformed to a list
 
         self._num_files = 0
         self._royal_squares = [None] * self.NUM_PLAYERS
@@ -163,6 +165,21 @@ class Position:
             if self._pieces.is_promoted(abbrev):
                 abbrev = self._pieces.unpromoted(abbrev)
             self._droppable_pieces.add(abbrev)
+
+    def _update_droppable_pieces(self):
+        result = []
+
+        # return non-standard shogi pieces in alphabetical order
+        for abbrev in sorted(self._droppable_pieces -
+                             set(self.STANDARD_HAND_ORDER)):
+            result.append(abbrev)
+
+        # ...then return standard shogi pieces in traditional order
+        for abbrev in self.STANDARD_HAND_ORDER:
+            if abbrev in self._droppable_pieces:
+                result.append(abbrev)
+
+        self._droppable_pieces = result
 
     def _verify_opponent_not_in_check(self):
         opponent = self.NUM_PLAYERS - self._player_to_move - 1
@@ -507,14 +524,9 @@ class Position:
         buffer = ''
 
         for player in range(self.NUM_PLAYERS):
-            # output non-standard shogi pieces in alphabetical order
-            for abbrev in sorted(self._hands[player].keys() -
-                                 self.STANDARD_HAND_ORDER):
-                buffer += self._sfen_piece_in_hand(player, abbrev)
-
-            # ...then output standard shogi pieces in traditional order
-            for abbrev in self.STANDARD_HAND_ORDER:
-                buffer += self._sfen_piece_in_hand(player, abbrev)
+            for abbrev in self.droppable_pieces:
+                if abbrev in self._hands[player]:
+                    buffer += self._sfen_piece_in_hand(player, abbrev)
 
         return buffer if buffer else '-'
 
