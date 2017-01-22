@@ -40,7 +40,7 @@ class PositionScene(QGraphicsScene):
             raise ValueError('Too many ranks in position for GUI')
 
         self._position = position
-        self._draw_board()
+        self._draw_board_grid()
         self._redraw_board_pieces()
         self._redraw_board_labels()
 
@@ -228,7 +228,7 @@ class PositionScene(QGraphicsScene):
                    (row + 1) * SQUARE_SIZE - num.boundingRect().height())
         self._hands[player].addToGroup(num)
 
-    def _draw_board(self):
+    def _draw_board_grid(self):
         board = QGraphicsItemGroup()
 
         pen = QPen()
