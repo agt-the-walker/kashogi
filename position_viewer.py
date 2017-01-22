@@ -21,6 +21,11 @@ PIECE_FONT = 'Sans'
 PIECE_SIZE = 32
 PIECE_OFFSET = 1
 
+PIECE_IN_HAND_SIZE = 24
+PIECE_IN_HAND_OFFSET = 19
+NUM_IN_HAND_SIZE = 12
+NUM_IN_HAND_OFFSET = 8
+
 LABEL_FONT = 'Sans'
 LABEL_SIZE = 16
 FILE_LABEL_OFFSET = 6
@@ -42,6 +47,10 @@ class PositionScene(QGraphicsScene):
 
         self._has_board_labels = True
 
+        self._hands = [None] * Position.NUM_PLAYERS
+        for player in range(Position.NUM_PLAYERS):
+            self._redraw_hand(player)
+
     def toggle_board_labels(self):
         if self._has_board_labels:
             self.removeItem(self._file_labels)
@@ -50,6 +59,11 @@ class PositionScene(QGraphicsScene):
             self._redraw_board_labels()
 
         self._has_board_labels = not self._has_board_labels
+
+        for player in range(Position.NUM_PLAYERS):
+            self.removeItem(self._hands[player])
+            self._redraw_hand(player)
+
         self.setSceneRect(self.itemsBoundingRect())
 
     def flip_view(self):
@@ -58,12 +72,16 @@ class PositionScene(QGraphicsScene):
         self.removeItem(self._board_pieces)
         self._redraw_board_pieces()
 
-        if not self._has_board_labels:
-            return
+        for player in range(Position.NUM_PLAYERS):
+            self.removeItem(self._hands[player])
+            self._redraw_hand(player)
 
-        self.removeItem(self._file_labels)
-        self.removeItem(self._rank_labels)
-        self._redraw_board_labels()
+        if self._has_board_labels:
+            self.removeItem(self._file_labels)
+            self.removeItem(self._rank_labels)
+            self._redraw_board_labels()
+
+        self.setSceneRect(self.itemsBoundingRect())
 
     def _redraw_board_labels(self):
         font = QFont(LABEL_FONT)
@@ -160,6 +178,57 @@ class PositionScene(QGraphicsScene):
                     - text.boundingRect().height() / 2)
 
         self._board_pieces.addToGroup(text)
+
+    def _redraw_hand(self, player):
+        font = QFont(PIECE_FONT)
+
+        self._hands[player] = QGraphicsItemGroup()
+
+        position = self._position
+        hand = position.in_hand(player)
+
+        index = 0
+        for abbrev in reversed(position.droppable_pieces):
+            if abbrev in hand:
+                self._draw_piece_in_hand(font, player, index, abbrev)
+                index += 1
+
+        if player == self.bottom_player:
+            x = self._board.boundingRect().width() + PIECE_IN_HAND_OFFSET
+            if self._has_board_labels:
+                x += RANK_LABEL_OFFSET + \
+                     self._rank_labels.boundingRect().width()
+        else:
+            x = -PIECE_IN_HAND_OFFSET
+            self._hands[player].setTransformOriginPoint(
+                    0, position.num_ranks / 2 * SQUARE_SIZE)
+            self._hands[player].setRotation(180)
+
+        self._hands[player].setPos(x, LINE_OFFSET)
+
+        self.addItem(self._hands[player])
+
+    def _draw_piece_in_hand(self, font, player, index, abbrev):
+        position = self._position
+        kanji = position.pieces.kanji(abbrev)
+
+        column = index // (position.num_ranks - 1)
+        row = index % (position.num_ranks - 1)
+        row = (position.num_ranks - 1) - row  # 0 is bottom row
+
+        piece = QGraphicsSimpleTextItem(kanji)
+        font.setPixelSize(PIECE_IN_HAND_SIZE)
+        piece.setFont(font)
+        piece.setPos(column * SQUARE_SIZE, row * SQUARE_SIZE)
+        self._hands[player].addToGroup(piece)
+
+        num = QGraphicsSimpleTextItem(str(position.in_hand(player)[abbrev]))
+        font.setPixelSize(NUM_IN_HAND_SIZE)
+        num.setFont(font)
+        num.setPos((column + 1) * SQUARE_SIZE - num.boundingRect().width()
+                   - NUM_IN_HAND_OFFSET,
+                   (row + 1) * SQUARE_SIZE - num.boundingRect().height())
+        self._hands[player].addToGroup(num)
 
     def _draw_board(self):
         board = QGraphicsItemGroup()
