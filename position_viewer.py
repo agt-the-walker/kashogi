@@ -54,14 +54,12 @@ class PositionScene(QGraphicsScene):
         if self._has_board_labels:
             self.removeItem(self._file_labels)
             self.removeItem(self._rank_labels)
+            self._hands[self.bottom_player].moveBy(-self._rank_label_span(), 0)
         else:
             self._redraw_board_labels()
+            self._hands[self.bottom_player].moveBy(self._rank_label_span(), 0)
 
         self._has_board_labels = not self._has_board_labels
-
-        for player in range(Position.NUM_PLAYERS):
-            self.removeItem(self._hands[player])
-            self._redraw_hand(player)
 
         self.setSceneRect(self.itemsBoundingRect())
 
@@ -192,7 +190,7 @@ class PositionScene(QGraphicsScene):
         if player == self.bottom_player:
             x = self._board.boundingRect().width() + PIECE_IN_HAND_OFFSET
             if self._has_board_labels:
-                x += LABEL_OFFSET + self._max_label_width
+                x += self._rank_label_span()
         else:
             x = -PIECE_IN_HAND_OFFSET
             self._hands[player].setTransformOriginPoint(
@@ -265,6 +263,9 @@ class PositionScene(QGraphicsScene):
     def _y(self, rank):
         return self._position.num_ranks - rank if self.bottom_player == 1 \
                                                else rank-1
+
+    def _rank_label_span(self):
+        return LABEL_OFFSET + self._max_label_width
 
     @staticmethod
     def _rank_label(rank):
