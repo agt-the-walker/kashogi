@@ -28,8 +28,7 @@ NUM_IN_HAND_OFFSET = 8
 
 LABEL_FONT = 'Sans'
 LABEL_SIZE = 16
-FILE_LABEL_OFFSET = 6
-RANK_LABEL_OFFSET = 4
+LABEL_OFFSET = 6
 
 
 class PositionScene(QGraphicsScene):
@@ -104,7 +103,7 @@ class PositionScene(QGraphicsScene):
             self._file_labels.addToGroup(text)
 
         self._file_labels.setPos(LINE_OFFSET + 0.5 * SQUARE_SIZE,
-                                 - FILE_LABEL_OFFSET - LABEL_SIZE)
+                                 - LABEL_OFFSET - LABEL_SIZE)
 
         for i in range(position.num_ranks):
             rank = position.num_ranks - i if self.bottom_player == 1 else i+1
@@ -118,7 +117,7 @@ class PositionScene(QGraphicsScene):
             self._rank_labels.addToGroup(text)
 
         self._rank_labels.setPos(self._board.boundingRect().width()
-                                 + RANK_LABEL_OFFSET,
+                                 + LABEL_OFFSET,
                                  LINE_OFFSET + 0.5 * SQUARE_SIZE)
 
         self.addItem(self._file_labels)
@@ -129,8 +128,8 @@ class PositionScene(QGraphicsScene):
             return
 
         fm = QFontMetrics(font)
-        self._max_label_width = max([fm.width(letter)
-                                     for letter in ascii_lowercase])
+        self._max_label_width = max([fm.width(chr(code)) for code in range(
+                ord('a'), ord('a') + self._position.num_ranks)])
 
     def _redraw_board_pieces(self):
         font = QFont(PIECE_FONT)
@@ -196,8 +195,7 @@ class PositionScene(QGraphicsScene):
         if player == self.bottom_player:
             x = self._board.boundingRect().width() + PIECE_IN_HAND_OFFSET
             if self._has_board_labels:
-                x += RANK_LABEL_OFFSET + \
-                     self._rank_labels.boundingRect().width()
+                x += LABEL_OFFSET + self._max_label_width
         else:
             x = -PIECE_IN_HAND_OFFSET
             self._hands[player].setTransformOriginPoint(
