@@ -537,11 +537,11 @@ class Position:
             buffer = str(number)
         else:
             buffer = ''
-        if number > 0:
-            piece = self._sfen_piece(abbrev)
-            if player == 1:
-                piece = piece.lower()
-            buffer += piece
+
+        piece = self._sfen_piece(abbrev)
+        if player == 1:
+            piece = piece.lower()
+        buffer += piece
 
         return buffer
 
