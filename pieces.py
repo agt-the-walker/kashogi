@@ -14,7 +14,7 @@ class PiecesException(Exception):
 class Pieces:
     def __init__(self, filename='pieces.yaml'):
         with open(filename, 'r') as stream:
-            doc = yaml.load(stream)
+            doc = yaml.safe_load(stream)
 
         self._betza = {}
         self._kanji = {}
