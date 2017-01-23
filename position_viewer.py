@@ -42,13 +42,30 @@ class PositionScene(QGraphicsScene):
         self._position = position
         self._draw_board_grid()
         self._redraw_board_pieces()
-        self._redraw_board_labels()
 
+        self._redraw_board_labels()
         self._has_board_labels = True
 
         self._hands = [None] * Position.NUM_PLAYERS
         for player in range(Position.NUM_PLAYERS):
             self._redraw_hand(player)
+
+    def flip_view(self):
+        self.bottom_player = Position.NUM_PLAYERS - self.bottom_player - 1
+
+        self.removeItem(self._board_pieces)
+        self._redraw_board_pieces()
+
+        if self._has_board_labels:
+            self.removeItem(self._file_labels)
+            self.removeItem(self._rank_labels)
+            self._redraw_board_labels()
+
+        for player in range(Position.NUM_PLAYERS):
+            self.removeItem(self._hands[player])
+            self._redraw_hand(player)
+
+        self.setSceneRect(self.itemsBoundingRect())
 
     def toggle_board_labels(self):
         if self._has_board_labels:
@@ -63,22 +80,83 @@ class PositionScene(QGraphicsScene):
 
         self.setSceneRect(self.itemsBoundingRect())
 
-    def flip_view(self):
-        self.bottom_player = Position.NUM_PLAYERS - self.bottom_player - 1
+    def _draw_board_grid(self):
+        board = QGraphicsItemGroup()
 
-        self.removeItem(self._board_pieces)
-        self._redraw_board_pieces()
+        pen = QPen()
+        pen.setWidth(BOARD_STROKE)
 
-        for player in range(Position.NUM_PLAYERS):
-            self.removeItem(self._hands[player])
-            self._redraw_hand(player)
+        position = self._position
 
-        if self._has_board_labels:
-            self.removeItem(self._file_labels)
-            self.removeItem(self._rank_labels)
-            self._redraw_board_labels()
+        board.addToGroup(self.addRect(
+            BOARD_STROKE / 2, BOARD_STROKE / 2,
+            SQUARE_SIZE * position.num_files + BOARD_STROKE - LINE_STROKE,
+            SQUARE_SIZE * position.num_ranks + BOARD_STROKE - LINE_STROKE,
+            pen))
 
-        self.setSceneRect(self.itemsBoundingRect())
+        pen.setWidth(LINE_STROKE)
+
+        for file in range(1, position.num_files):
+            board.addToGroup(self.addLine(
+                LINE_OFFSET + SQUARE_SIZE * file, LINE_OFFSET,
+                LINE_OFFSET + SQUARE_SIZE * file,
+                LINE_OFFSET + SQUARE_SIZE * position.num_ranks,
+                pen))
+
+        for rank in range(1, position.num_ranks):
+            board.addToGroup(self.addLine(
+                LINE_OFFSET, LINE_OFFSET + SQUARE_SIZE * rank,
+                LINE_OFFSET + SQUARE_SIZE * position.num_files,
+                LINE_OFFSET + SQUARE_SIZE * rank,
+                pen))
+
+        self.addItem(board)
+        self._board = board
+
+    def _redraw_board_pieces(self):
+        font = QFont(PIECE_FONT)
+        font.setPixelSize(PIECE_SIZE)
+
+        self._board_pieces = QGraphicsItemGroup()
+
+        position = self._position
+
+        for file in range(1, position.num_files+1):
+            for rank in range(1, position.num_ranks+1):
+                square = ((file, rank))
+                piece = position.get(square)
+                if piece:
+                    self._draw_board_piece(font, piece, square)
+
+        self.addItem(self._board_pieces)
+
+    def _draw_board_piece(self, font, piece, square):
+        position = self._position
+
+        abbrev = piece.upper()
+        kanji = position.pieces.kanji(abbrev)
+
+        text = QGraphicsSimpleTextItem(kanji)
+        text.setFont(font)
+
+        if position.pieces.is_promoted(abbrev):
+            text.setBrush(QBrush(Qt.red))
+
+        player = 0 if abbrev == piece else 1
+        piece_offset = PIECE_OFFSET
+        if player != self.bottom_player:
+            text.setTransformOriginPoint(text.boundingRect().center())
+            text.setRotation(180)
+            piece_offset = -piece_offset
+
+        file, rank = square
+
+        text.setPos(LINE_OFFSET + (self._x(file) + 0.5) * SQUARE_SIZE
+                    - text.boundingRect().width() / 2,
+                    LINE_OFFSET + (self._y(rank) + 0.5) * SQUARE_SIZE
+                    + piece_offset - text.boundingRect().height() / 2)
+
+        self._board_pieces.addToGroup(text)
 
     def _redraw_board_labels(self):
         font = QFont(LABEL_FONT)
@@ -127,51 +205,6 @@ class PositionScene(QGraphicsScene):
         self._max_label_width = max(
                 [fm.width(self._rank_label(rank)) for rank in
                  range(1, self._position.num_ranks+1)])
-
-    def _redraw_board_pieces(self):
-        font = QFont(PIECE_FONT)
-        font.setPixelSize(PIECE_SIZE)
-
-        self._board_pieces = QGraphicsItemGroup()
-
-        position = self._position
-
-        for file in range(1, position.num_files+1):
-            for rank in range(1, position.num_ranks+1):
-                square = ((file, rank))
-                piece = position.get(square)
-                if piece:
-                    self._draw_board_piece(font, piece, square)
-
-        self.addItem(self._board_pieces)
-
-    def _draw_board_piece(self, font, piece, square):
-        position = self._position
-
-        abbrev = piece.upper()
-        kanji = position.pieces.kanji(abbrev)
-
-        text = QGraphicsSimpleTextItem(kanji)
-        text.setFont(font)
-
-        if position.pieces.is_promoted(abbrev):
-            text.setBrush(QBrush(Qt.red))
-
-        player = 0 if abbrev == piece else 1
-        piece_offset = PIECE_OFFSET
-        if player != self.bottom_player:
-            text.setTransformOriginPoint(text.boundingRect().center())
-            text.setRotation(180)
-            piece_offset = -piece_offset
-
-        file, rank = square
-
-        text.setPos(LINE_OFFSET + (self._x(file) + 0.5) * SQUARE_SIZE
-                    - text.boundingRect().width() / 2,
-                    LINE_OFFSET + (self._y(rank) + 0.5) * SQUARE_SIZE
-                    + piece_offset - text.boundingRect().height() / 2)
-
-        self._board_pieces.addToGroup(text)
 
     def _redraw_hand(self, player):
         font = QFont(PIECE_FONT)
@@ -223,38 +256,8 @@ class PositionScene(QGraphicsScene):
                    (row + 1) * SQUARE_SIZE - num.boundingRect().height())
         self._hands[player].addToGroup(num)
 
-    def _draw_board_grid(self):
-        board = QGraphicsItemGroup()
-
-        pen = QPen()
-        pen.setWidth(BOARD_STROKE)
-
-        position = self._position
-
-        board.addToGroup(self.addRect(
-            BOARD_STROKE / 2, BOARD_STROKE / 2,
-            SQUARE_SIZE * position.num_files + BOARD_STROKE - LINE_STROKE,
-            SQUARE_SIZE * position.num_ranks + BOARD_STROKE - LINE_STROKE,
-            pen))
-
-        pen.setWidth(LINE_STROKE)
-
-        for file in range(1, position.num_files):
-            board.addToGroup(self.addLine(
-                LINE_OFFSET + SQUARE_SIZE * file, LINE_OFFSET,
-                LINE_OFFSET + SQUARE_SIZE * file,
-                LINE_OFFSET + SQUARE_SIZE * position.num_ranks,
-                pen))
-
-        for rank in range(1, position.num_ranks):
-            board.addToGroup(self.addLine(
-                LINE_OFFSET, LINE_OFFSET + SQUARE_SIZE * rank,
-                LINE_OFFSET + SQUARE_SIZE * position.num_files,
-                LINE_OFFSET + SQUARE_SIZE * rank,
-                pen))
-
-        self.addItem(board)
-        self._board = board
+    def _rank_label_span(self):
+        return LABEL_OFFSET + self._max_label_width
 
     def _x(self, file):
         return self._position.num_files - file if self.bottom_player == 0 \
@@ -263,9 +266,6 @@ class PositionScene(QGraphicsScene):
     def _y(self, rank):
         return self._position.num_ranks - rank if self.bottom_player == 1 \
                                                else rank-1
-
-    def _rank_label_span(self):
-        return LABEL_OFFSET + self._max_label_width
 
     @staticmethod
     def _rank_label(rank):
