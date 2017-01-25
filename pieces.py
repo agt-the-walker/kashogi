@@ -13,7 +13,7 @@ class PiecesException(Exception):
 
 class Pieces:
     def __init__(self, filename='pieces.yaml'):
-        with open(filename, 'r') as stream:
+        with open(filename, 'r', encoding='utf-8') as stream:
             doc = yaml.safe_load(stream)
 
         self._betza = {}
