@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, \
 
 from pieces import Pieces
 from position import Position
-from string import ascii_lowercase
+from utils import rank_label
 
 BOARD_STROKE = 2
 LINE_STROKE = 1
@@ -35,9 +35,6 @@ class PositionScene(QGraphicsScene):
     def __init__(self, position):
         super().__init__()
         self.bottom_player = position.player_to_move
-
-        if position.num_ranks > len(ascii_lowercase):
-            raise ValueError('Too many ranks in position for GUI')
 
         self._position = position
         self._draw_board_grid()
@@ -181,7 +178,7 @@ class PositionScene(QGraphicsScene):
                                  - LABEL_OFFSET - LABEL_SIZE)
 
         for rank in range(1, position.num_ranks+1):
-            text = QGraphicsSimpleTextItem(self._rank_label(rank))
+            text = QGraphicsSimpleTextItem(rank_label(rank))
             text.setFont(font)
             text.setPos((self._max_label_width
                          - text.boundingRect().width()) / 2,
@@ -203,7 +200,7 @@ class PositionScene(QGraphicsScene):
 
         fm = QFontMetrics(font)
         self._max_label_width = max(
-                [fm.width(self._rank_label(rank)) for rank in
+                [fm.width(rank_label(rank)) for rank in
                  range(1, self._position.num_ranks+1)])
 
     def _redraw_hand(self, player):
@@ -266,10 +263,6 @@ class PositionScene(QGraphicsScene):
     def _y(self, rank):
         return self._position.num_ranks - rank if self.bottom_player == 1 \
                                                else rank-1
-
-    @staticmethod
-    def _rank_label(rank):
-        return chr(ord('a') + rank - 1)
 
 
 class PositionView(QGraphicsView):
