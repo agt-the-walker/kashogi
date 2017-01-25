@@ -235,8 +235,7 @@ class PositionScene(QGraphicsScene):
         position = self._position
         kanji = position.pieces.kanji(abbrev)
 
-        column = index // (position.num_ranks - 1)
-        row = index % (position.num_ranks - 1)
+        column, row = divmod(index, position.num_ranks - 1)
         row = (position.num_ranks - 1) - row  # 0 is bottom row
 
         piece = QGraphicsSimpleTextItem(kanji)
