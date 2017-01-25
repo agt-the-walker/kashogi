@@ -50,6 +50,9 @@ class PositionScene(QGraphicsScene):
     def player_to_move(self):
         return self._position.player_to_move
 
+    def status(self):
+        return self._position.status()
+
     def flip_view(self):
         self.bottom_player = Position.NUM_PLAYERS - self.bottom_player - 1
 
@@ -270,8 +273,10 @@ class PositionScene(QGraphicsScene):
 class PositionView(QGraphicsView):
     def __init__(self, scene):
         super().__init__(scene)
-        title = '{} to move'.format(
-                Position.player_name(scene.player_to_move()))
+
+        status = scene.status()
+        title = '{} - '.format(status) if status else ''
+        title += '{}'.format(Position.player_name(scene.player_to_move()))
         self.setWindowTitle(title)
 
         self.setFrameStyle(0)
