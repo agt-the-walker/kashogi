@@ -122,7 +122,7 @@ class Position:
         if self._pieces.is_royal(abbrev):
             if self._royal_squares[player]:
                 raise ValueError('Too many royal pieces for {}'
-                                 .format(self._player_name(player)))
+                                 .format(self.player_name(player)))
             self._royal_squares[player] = (file, rank)
 
         max_per_file = self._pieces.max_per_file(abbrev)
@@ -130,12 +130,12 @@ class Position:
             self._num_per_file[player][abbrev][file] += 1
             if self._num_per_file[player][abbrev][file] > max_per_file:
                 raise ValueError('Too many {} for {} on file {}'
-                                 .format(abbrev, self._player_name(player),
+                                 .format(abbrev, self.player_name(player),
                                          file))
 
         if not self._is_piece_allowed_on_rank(abbrev, player, rank):
             raise ValueError('{} for {} found on furthest rank(s)'
-                             .format(abbrev, self._player_name(player)))
+                             .format(abbrev, self.player_name(player)))
         elif (self._pieces.num_restricted_furthest_ranks(abbrev) >
               self._promotion_zone_height()):
             raise ValueError('Promotion zone too small for {}'.format(abbrev))
@@ -493,8 +493,9 @@ class Position:
     def _promotion_zone_height(self):
         return self._num_ranks // 3  # ok for Tori, standard, Okisaki, Wa shogi
 
-    def _player_name(self, player):
-        assert player < self.NUM_PLAYERS
+    @staticmethod
+    def player_name(player):
+        assert player < Position.NUM_PLAYERS
         return {0: 'black', 1: 'white'}[player]
 
     def _sfen_board(self):
@@ -518,7 +519,7 @@ class Position:
         return '/'.join(ranks)
 
     def _sfen_player(self):
-        return self._player_name(self._player_to_move)[0]
+        return self.player_name(self._player_to_move)[0]
 
     def _sfen_hands(self):
         buffer = ''
