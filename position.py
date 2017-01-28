@@ -383,12 +383,52 @@ class Position:
         if not self._is_piece_allowed_on_rank(abbrev, self._player_to_move,
                                               dest_rank):
             return [True]  # i.e. mandatory
-        elif self._in_promotion_zone(square):
-            return [False, True]
-        elif self._in_promotion_zone(dest_square):
-            return [False, True]
+        elif (self._in_promotion_zone(square) or
+              self._in_promotion_zone(dest_square)):
+            if self._should_promote(abbrev, dest_rank):
+                return [True, False]
+            else:
+                return [False, True]
         else:
             return [False]
+
+    def _should_promote(self, abbrev, dest_rank):
+        if not self._pieces.can_retreat(abbrev):
+            directions = self._effective_directions(abbrev, dest_rank)
+        else:
+            directions = self._pieces.directions(abbrev)
+
+        new_directions = self._pieces.directions(self._pieces.promoted(abbrev))
+        if not set(directions).issubset(new_directions):
+            return False
+
+        for coordinate, range in directions.items():
+            new_range = new_directions[coordinate]
+            if new_range != 0 and (range == 0 or new_range < range):
+                return False
+
+        return True
+
+    def _effective_directions(self, abbrev, rank):
+        result = {}
+
+        nth_furthest_rank = self._nth_furthest_rank(self._player_to_move, rank)
+        for coordinate, range in self._pieces.directions(abbrev).items():
+            dx, dy = coordinate
+            if dy > 0:
+                max_new_range = (nth_furthest_rank - 1) // dy
+                if max_new_range == 0:
+                    continue  # cannot move to this direction anymore
+
+                if range == 0:
+                    effective_range = max_new_range
+                else:
+                    effective_range = min(max_new_range, range)
+            else:
+                effective_range = range
+            result[coordinate] = effective_range
+
+        return result
 
     def drop(self, abbrev, dest_square):
         if dest_square not in self.legal_drops_with_piece(abbrev):
@@ -488,7 +528,9 @@ class Position:
                 self._nth_furthest_rank(self._player_to_move, rank))
 
     def _nth_furthest_rank(self, player, rank):
-        return {0: rank, 1: self._num_ranks+1 - rank}[player]
+        result = {0: rank, 1: self._num_ranks+1 - rank}[player]
+        assert result > 0
+        return result
 
     def _promotion_zone_height(self):
         return self._num_ranks // 3  # ok for Tori, standard, Okisaki, Wa shogi

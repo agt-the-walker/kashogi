@@ -26,6 +26,7 @@ class PiecesTestCase(unittest.TestCase):
         self.assertEqual(pieces.max_per_file('P'), 1)
         self.assertEqual(pieces.max_per_file("S'"), 2)
 
+        self.assertEqual(pieces.can_retreat('P'), False)
         self.assertEqual(pieces.directions('P'), {(0, 1): 1})
         self.assertEqual(pieces.num_restricted_furthest_ranks('N'), 2)
 

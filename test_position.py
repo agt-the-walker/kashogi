@@ -317,9 +317,9 @@ class PositionTestCase(unittest.TestCase):
         # no promoted version (G)
         self.assertEqual(position.promotions((3, 7), (3, 6)), [False])
 
-        # can promote (P)
-        self.assertEqual(position.promotions((2, 4), (2, 3)), [False, True])
-        self.assertEqual(position.promotions((1, 3), (1, 2)), [False, True])
+        # should promote (P)
+        self.assertEqual(position.promotions((2, 4), (2, 3)), [True, False])
+        self.assertEqual(position.promotions((1, 3), (1, 2)), [True, False])
         # must promote (P)
         self.assertEqual(position.promotions((3, 2), (3, 1)), [True])
 
@@ -345,7 +345,26 @@ class PositionTestCase(unittest.TestCase):
         self.assertEqual(position.promotions((1, 7), (2, 9)), [True])
 
         # moves out of promotion zone (R)
-        self.assertEqual(position.promotions((3, 7), (3, 6)), [False, True])
+        self.assertEqual(position.promotions((3, 7), (3, 6)), [True, False])
+
+    def test_promotion_choices_for_lance(self):
+        position = self.check('3/3/2L/1L1/L2/3/3/3/K2 b -', 3, 9)
+
+        # can promote
+        self.assertEqual(position.promotions((3, 5), (3, 3)), [False, True])
+        # should promote
+        self.assertEqual(position.promotions((2, 4), (2, 2)), [True, False])
+        self.assertEqual(position.promotions((1, 3), (1, 2)), [True, False])
+        # must promote
+        self.assertEqual(position.promotions((1, 3), (1, 1)), [True])
+
+    def test_promotion_choices_for_flying_cock(self):
+        position = self.check('2k/FC@2/2FC@/1FC@1/3/3/3/3/3 b -', 3, 9)
+
+        # should promote
+        self.assertEqual(position.promotions((2, 4), (2, 3)), [True, False])
+        self.assertEqual(position.promotions((1, 3), (1, 2)), [True, False])
+        self.assertEqual(position.promotions((3, 2), (3, 1)), [True, False])
 
     def test_pawn_drops(self):
         position = self.check('2k/3/K2 b 2Pp')

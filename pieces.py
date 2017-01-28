@@ -112,6 +112,9 @@ class Pieces:
     def max_per_file(self, abbrev):
         return self._max_per_file.get(abbrev)
 
+    def can_retreat(self, abbrev):
+        return self._betza[abbrev].can_retreat()
+
     def directions(self, abbrev):
         return self._betza[abbrev].directions
 
