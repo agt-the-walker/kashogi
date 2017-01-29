@@ -54,7 +54,8 @@ class PositionScene(QGraphicsScene):
 
         self._hands = [None] * Position.NUM_PLAYERS
         for player in range(Position.NUM_PLAYERS):
-            self._redraw_hand(player)
+            self._draw_hand(player)
+        self._update_hands()
 
     def player_to_move(self):
         return self._position.player_to_move
@@ -71,14 +72,27 @@ class PositionScene(QGraphicsScene):
             self.removeItem(self._rank_labels)
             self._redraw_board_labels()
 
-        for player in range(Position.NUM_PLAYERS):
-            self.removeItem(self._hands[player])
-            self._redraw_hand(player)
+        self._update_hands()
 
         self.setSceneRect(self.itemsBoundingRect())
 
     def _update_board_orientation(self):
         self._board_pieces.setRotation(self.bottom_player * 180)
+
+    def _update_hands(self):
+        for player in range(Position.NUM_PLAYERS):
+            if player == self.bottom_player:
+                x = self._board.boundingRect().width() + PIECE_IN_HAND_OFFSET
+                if self._has_board_labels:
+                    x += self._rank_label_span()
+                self._hands[player].setRotation(0)
+            else:
+                x = -PIECE_IN_HAND_OFFSET
+                self._hands[player].setTransformOriginPoint(
+                        0, position.num_ranks / 2 * SQUARE_SIZE)
+                self._hands[player].setRotation(180)
+
+            self._hands[player].setPos(x, LINE_OFFSET)
 
     def toggle_board_labels(self):
         if self._has_board_labels:
@@ -218,7 +232,7 @@ class PositionScene(QGraphicsScene):
                 [fm.width(rank_label(rank)) for rank in
                  range(1, self._position.num_ranks+1)])
 
-    def _redraw_hand(self, player):
+    def _draw_hand(self, player):
         font = QFont(PIECE_FONT)
 
         self._hands[player] = QGraphicsItemParent()
@@ -231,18 +245,6 @@ class PositionScene(QGraphicsScene):
             if abbrev in hand:
                 self._draw_piece_in_hand(font, player, index, abbrev)
                 index += 1
-
-        if player == self.bottom_player:
-            x = self._board.boundingRect().width() + PIECE_IN_HAND_OFFSET
-            if self._has_board_labels:
-                x += self._rank_label_span()
-        else:
-            x = -PIECE_IN_HAND_OFFSET
-            self._hands[player].setTransformOriginPoint(
-                    0, position.num_ranks / 2 * SQUARE_SIZE)
-            self._hands[player].setRotation(180)
-
-        self._hands[player].setPos(x, LINE_OFFSET)
 
         self.addItem(self._hands[player])
 
