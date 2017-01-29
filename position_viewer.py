@@ -3,10 +3,11 @@
 import signal
 import sys
 
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QRectF
 from PyQt5.QtGui import QBrush, QFont, QFontMetrics, QPainter, QPen, QTransform
 from PyQt5.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, \
-                            QGraphicsSimpleTextItem, QGraphicsItemGroup
+                            QGraphicsSimpleTextItem, QGraphicsItemGroup, \
+                            QGraphicsItem
 
 from pieces import Pieces
 from position import Position
@@ -29,6 +30,14 @@ NUM_IN_HAND_OFFSET = 8
 LABEL_FONT = 'Sans'
 LABEL_SIZE = 16
 LABEL_OFFSET = 6
+
+
+class QGraphicsItemParent(QGraphicsItem):
+    def boundingRect(self, *args):
+        return QRectF()
+
+    def paint(self, *args):
+        pass
 
 
 class PositionScene(QGraphicsScene):
@@ -84,43 +93,40 @@ class PositionScene(QGraphicsScene):
         self.setSceneRect(self.itemsBoundingRect())
 
     def _draw_board_grid(self):
-        board = QGraphicsItemGroup()
-
         pen = QPen()
         pen.setWidth(BOARD_STROKE)
 
         position = self._position
 
-        board.addToGroup(self.addRect(
+        board = self.addRect(
             BOARD_STROKE / 2, BOARD_STROKE / 2,
             SQUARE_SIZE * position.num_files + BOARD_STROKE - LINE_STROKE,
             SQUARE_SIZE * position.num_ranks + BOARD_STROKE - LINE_STROKE,
-            pen))
+            pen)
 
         pen.setWidth(LINE_STROKE)
 
         for file in range(1, position.num_files):
-            board.addToGroup(self.addLine(
+            self.addLine(
                 LINE_OFFSET + SQUARE_SIZE * file, LINE_OFFSET,
                 LINE_OFFSET + SQUARE_SIZE * file,
                 LINE_OFFSET + SQUARE_SIZE * position.num_ranks,
-                pen))
+                pen)
 
         for rank in range(1, position.num_ranks):
-            board.addToGroup(self.addLine(
+            self.addLine(
                 LINE_OFFSET, LINE_OFFSET + SQUARE_SIZE * rank,
                 LINE_OFFSET + SQUARE_SIZE * position.num_files,
                 LINE_OFFSET + SQUARE_SIZE * rank,
-                pen))
+                pen)
 
-        self.addItem(board)
         self._board = board
 
     def _redraw_board_pieces(self):
         font = QFont(PIECE_FONT)
         font.setPixelSize(PIECE_SIZE)
 
-        self._board_pieces = QGraphicsItemGroup()
+        self._board_pieces = QGraphicsItemParent()
 
         position = self._position
 
@@ -139,7 +145,7 @@ class PositionScene(QGraphicsScene):
         abbrev = piece.upper()
         kanji = position.pieces.kanji(abbrev)
 
-        text = QGraphicsSimpleTextItem(kanji)
+        text = QGraphicsSimpleTextItem(kanji, self._board_pieces)
         text.setFont(font)
 
         if position.pieces.is_promoted(abbrev):
@@ -158,8 +164,6 @@ class PositionScene(QGraphicsScene):
                     - text.boundingRect().width() / 2,
                     LINE_OFFSET + (self._y(rank) + 0.5) * SQUARE_SIZE
                     + piece_offset - text.boundingRect().height() / 2)
-
-        self._board_pieces.addToGroup(text)
 
     def _redraw_board_labels(self):
         font = QFont(LABEL_FONT)
@@ -212,7 +216,7 @@ class PositionScene(QGraphicsScene):
     def _redraw_hand(self, player):
         font = QFont(PIECE_FONT)
 
-        self._hands[player] = QGraphicsItemGroup()
+        self._hands[player] = QGraphicsItemParent()
 
         position = self._position
         hand = position.in_hand(player)
@@ -244,19 +248,18 @@ class PositionScene(QGraphicsScene):
         column, row = divmod(index, position.num_ranks - 1)
         row = (position.num_ranks - 1) - row  # 0 is bottom row
 
-        piece = QGraphicsSimpleTextItem(kanji)
+        piece = QGraphicsSimpleTextItem(kanji, self._hands[player])
         font.setPixelSize(PIECE_IN_HAND_SIZE)
         piece.setFont(font)
         piece.setPos(column * SQUARE_SIZE, row * SQUARE_SIZE)
-        self._hands[player].addToGroup(piece)
 
-        num = QGraphicsSimpleTextItem(str(position.in_hand(player)[abbrev]))
+        num = QGraphicsSimpleTextItem(str(position.in_hand(player)[abbrev]),
+                                      self._hands[player])
         font.setPixelSize(NUM_IN_HAND_SIZE)
         num.setFont(font)
         num.setPos((column + 1) * SQUARE_SIZE - num.boundingRect().width()
                    - NUM_IN_HAND_OFFSET,
                    (row + 1) * SQUARE_SIZE - num.boundingRect().height())
-        self._hands[player].addToGroup(num)
 
     def _rank_label_span(self):
         return LABEL_OFFSET + self._max_label_width
