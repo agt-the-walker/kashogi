@@ -47,7 +47,7 @@ class PositionScene(QGraphicsScene):
 
         self._position = position
         self._draw_board_grid()
-        self._redraw_board_pieces()
+        self._draw_board_pieces()
 
         self._redraw_board_labels()
         self._has_board_labels = True
@@ -64,9 +64,7 @@ class PositionScene(QGraphicsScene):
 
     def flip_view(self):
         self.bottom_player = Position.NUM_PLAYERS - self.bottom_player - 1
-
-        self.removeItem(self._board_pieces)
-        self._redraw_board_pieces()
+        self._update_board_orientation()
 
         if self._has_board_labels:
             self.removeItem(self._file_labels)
@@ -78,6 +76,9 @@ class PositionScene(QGraphicsScene):
             self._redraw_hand(player)
 
         self.setSceneRect(self.itemsBoundingRect())
+
+    def _update_board_orientation(self):
+        self._board_pieces.setRotation(self.bottom_player * 180)
 
     def toggle_board_labels(self):
         if self._has_board_labels:
@@ -122,11 +123,13 @@ class PositionScene(QGraphicsScene):
 
         self._board = board
 
-    def _redraw_board_pieces(self):
+    def _draw_board_pieces(self):
         font = QFont(PIECE_FONT)
         font.setPixelSize(PIECE_SIZE)
 
         self._board_pieces = QGraphicsItemParent()
+        self._board_pieces.setTransformOriginPoint(
+                self._board.boundingRect().center())
 
         position = self._position
 
@@ -137,6 +140,7 @@ class PositionScene(QGraphicsScene):
                 if piece:
                     self._draw_board_piece(font, piece, square)
 
+        self._update_board_orientation()
         self.addItem(self._board_pieces)
 
     def _draw_board_piece(self, font, piece, square):
@@ -153,16 +157,17 @@ class PositionScene(QGraphicsScene):
 
         player = 0 if abbrev == piece else 1
         piece_offset = PIECE_OFFSET
-        if player != self.bottom_player:
+        if player == 1:
             text.setTransformOriginPoint(text.boundingRect().center())
             text.setRotation(180)
             piece_offset = -piece_offset
 
         file, rank = square
 
-        text.setPos(LINE_OFFSET + (self._x(file) + 0.5) * SQUARE_SIZE
+        text.setPos(LINE_OFFSET
+                    + (self._position.num_files - file + 0.5) * SQUARE_SIZE
                     - text.boundingRect().width() / 2,
-                    LINE_OFFSET + (self._y(rank) + 0.5) * SQUARE_SIZE
+                    LINE_OFFSET + (rank - 0.5) * SQUARE_SIZE
                     + piece_offset - text.boundingRect().height() / 2)
 
     def _redraw_board_labels(self):
