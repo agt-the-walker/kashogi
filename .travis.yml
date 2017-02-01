@@ -3,7 +3,6 @@ sudo: false
 python:
 - "3.5"
 - "3.6"
-- "nightly"
 install:
 - pip install coveralls
 - pip install -r requirements.txt
