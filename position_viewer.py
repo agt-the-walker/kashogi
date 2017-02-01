@@ -326,6 +326,7 @@ class PositionScene(QGraphicsScene):
         self.removeItem(self._hands[player])
         self._draw_hand(player)
         self._update_hands()
+        self.views()[0].resize()
 
     def _draw_hand(self, player):
         font = QFont(PIECE_FONT)
@@ -383,9 +384,9 @@ class PositionView(QGraphicsView):
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setRenderHint(QPainter.Antialiasing)
-        self._resize(1)
+        self.resize(1)
 
-    def _resize(self, zoom_level=None):
+    def resize(self, zoom_level=None):
         if zoom_level:
             self._zoom_level = zoom_level
         self.setFixedSize(self._zoom_level * self.scene().width(),
@@ -397,12 +398,12 @@ class PositionView(QGraphicsView):
             if zoom_level > 0:
                 t = QTransform.fromScale(zoom_level, zoom_level)
                 self.setTransform(t)
-                self._resize(zoom_level)
+                self.resize(zoom_level)
         elif event.text() == 'f':
             self.scene().flip_view()
         elif event.text() == 'l':
             self.scene().toggle_board_labels()
-            self._resize()
+            self.resize()
 
     def update_title(self):
         status = self.scene().status()
