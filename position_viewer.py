@@ -11,16 +11,11 @@ from PyQt5.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, \
 
 from pieces import Pieces
 from position import Position
-from utils import rank_label
-
-BOARD_STROKE = 2
-LINE_STROKE = 1
-LINE_OFFSET = BOARD_STROKE - LINE_STROKE / 2
-SQUARE_SIZE = 39  # preferably odd to center text correctly
+from coordinates import BOARD_STROKE, LINE_OFFSET, LINE_STROKE, SQUARE_SIZE, \
+                        Coordinates
 
 PIECE_FONT = 'Sans'
 PIECE_SIZE = 32
-PIECE_OFFSET = 1
 
 PIECE_IN_HAND_SIZE = 24
 PIECE_IN_HAND_OFFSET = 19
@@ -31,21 +26,75 @@ LABEL_FONT = 'Sans'
 LABEL_SIZE = 16
 LABEL_OFFSET = 6
 
+GHOST_OPACITY = 0.4
+
 
 class QGraphicsItemParent(QGraphicsItem):
+    def __init__(self):
+        super().__init__()
+        self._squares = {}
+
     def boundingRect(self, *args):
         return QRectF()
 
     def paint(self, *args):
         pass
 
+    def get(self, square):
+        return self._squares.get(square)
+
+    def put(self, square, item):
+        self._squares[square] = item
+
+
+class QGraphicsPieceItem(QGraphicsSimpleTextItem):
+    def __init__(self, text, parent, position, square):
+        super().__init__(text, parent)
+        self._position = position
+        self._coordinates = Coordinates(position.num_files, position.num_ranks)
+
+        self._square = square
+        self._ghost = None
+
+    @property
+    def square(self):
+        return self._square
+
+    def mousePressEvent(self, event):
+        if (self.flags() & QGraphicsItem.ItemIsMovable) and \
+           event.button() == Qt.LeftButton:
+            self._ghost = self.scene().draw_board_piece(self._square, True)
+
+        super().mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        super().mouseReleaseEvent(event)
+
+        if self._ghost:
+            self.scene().removeItem(self._ghost)
+            self._ghost = None
+
+            position = self._position
+            player = self._position.player_to_move
+            square = self._square
+            dest_square = self._coordinates.pos_to_square(self.pos(), self,
+                                                          player)
+
+            if dest_square not in position.legal_moves_from_square(square):
+                # restore initial position
+                self.setPos(self._coordinates.square_to_pos(square, self,
+                                                            player))
+            else:
+                self.scene().move(square, dest_square)
+
 
 class PositionScene(QGraphicsScene):
     def __init__(self, position):
         super().__init__()
-        self.bottom_player = position.player_to_move
-
         self._position = position
+        self._coordinates = Coordinates(position.num_files, position.num_ranks)
+        self.bottom_player = self.player_to_move()
+
         self._draw_board_grid()
         self._draw_board_pieces()
 
@@ -56,6 +105,8 @@ class PositionScene(QGraphicsScene):
         for player in range(Position.NUM_PLAYERS):
             self._draw_hand(player)
         self._update_hands()
+
+        self.prepare_next_move()
 
     def player_to_move(self):
         return self._position.player_to_move
@@ -107,6 +158,27 @@ class PositionScene(QGraphicsScene):
 
         self.setSceneRect(self.itemsBoundingRect())
 
+    def prepare_next_move(self):
+        position = self._position
+
+        for piece_item in self._board_pieces.childItems():
+            piece = position.get(piece_item.square)
+            abbrev = piece.upper()
+            player = 0 if abbrev == piece else 1
+
+            if player == self.player_to_move():
+                try:
+                    next(position.legal_moves_from_square(piece_item.square))
+                    piece_item.setFlag(QGraphicsItem.ItemIsMovable)
+                    continue
+                except StopIteration:
+                    pass
+
+            piece_item.setFlag(QGraphicsItem.ItemIsMovable, False)
+
+        if self.views():
+            self.views()[0].update_title()
+
     def _draw_board_grid(self):
         pen = QPen()
         pen.setWidth(BOARD_STROKE)
@@ -138,9 +210,6 @@ class PositionScene(QGraphicsScene):
         self._board = board
 
     def _draw_board_pieces(self):
-        font = QFont(PIECE_FONT)
-        font.setPixelSize(PIECE_SIZE)
-
         self._board_pieces = QGraphicsItemParent()
         self._board_pieces.setTransformOriginPoint(
                 self._board.boundingRect().center())
@@ -152,37 +221,58 @@ class PositionScene(QGraphicsScene):
                 square = ((file, rank))
                 piece = position.get(square)
                 if piece:
-                    self._draw_board_piece(font, piece, square)
+                    self._board_pieces.put(square,
+                                           self.draw_board_piece(square))
 
         self._update_board_orientation()
         self.addItem(self._board_pieces)
 
-    def _draw_board_piece(self, font, piece, square):
+    def draw_board_piece(self, square, ghost=False):
         position = self._position
 
+        piece = position.get(square)
         abbrev = piece.upper()
         kanji = position.pieces.kanji(abbrev)
 
-        text = QGraphicsSimpleTextItem(kanji, self._board_pieces)
+        font = QFont(PIECE_FONT)
+        font.setPixelSize(PIECE_SIZE)
+
+        text = QGraphicsPieceItem(kanji, self._board_pieces, position, square)
         text.setFont(font)
 
         if position.pieces.is_promoted(abbrev):
             text.setBrush(QBrush(Qt.red))
 
         player = 0 if abbrev == piece else 1
-        piece_offset = PIECE_OFFSET
         if player == 1:
             text.setTransformOriginPoint(text.boundingRect().center())
             text.setRotation(180)
-            piece_offset = -piece_offset
+        if ghost:
+            text.setOpacity(GHOST_OPACITY)
 
-        file, rank = square
+        text.setPos(self._coordinates.square_to_pos(square, text, player))
 
-        text.setPos(LINE_OFFSET
-                    + (self._position.num_files - file + 0.5) * SQUARE_SIZE
-                    - text.boundingRect().width() / 2,
-                    LINE_OFFSET + (rank - 0.5) * SQUARE_SIZE
-                    + piece_offset - text.boundingRect().height() / 2)
+        return text
+
+    def move(self, square, dest_square):
+        player = self.player_to_move()
+
+        # XXX: show a dialog box instead of auto-promoting
+        promotions = position.promotions(square, dest_square)
+        position.move(square, dest_square, promotions[0])
+
+        piece_item = self._board_pieces.get(square)
+        self.removeItem(piece_item)
+        self._board_pieces.put(square, None)
+
+        captured_piece_item = self._board_pieces.get(dest_square)
+        if captured_piece_item:
+            self.removeItem(captured_piece_item)
+            self._redraw_hand(player)
+
+        self._board_pieces.put(dest_square, self.draw_board_piece(dest_square))
+
+        self.prepare_next_move()
 
     def _redraw_board_labels(self):
         font = QFont(LABEL_FONT)
@@ -207,7 +297,7 @@ class PositionScene(QGraphicsScene):
                                  - LABEL_OFFSET - LABEL_SIZE)
 
         for rank in range(1, position.num_ranks+1):
-            text = QGraphicsSimpleTextItem(rank_label(rank))
+            text = QGraphicsSimpleTextItem(Coordinates.rank_label(rank))
             text.setFont(font)
             text.setPos((self._max_label_width
                          - text.boundingRect().width()) / 2,
@@ -229,8 +319,13 @@ class PositionScene(QGraphicsScene):
 
         fm = QFontMetrics(font)
         self._max_label_width = max(
-                [fm.width(rank_label(rank)) for rank in
+                [fm.width(Coordinates.rank_label(rank)) for rank in
                  range(1, self._position.num_ranks+1)])
+
+    def _redraw_hand(self, player):
+        self.removeItem(self._hands[player])
+        self._draw_hand(player)
+        self._update_hands()
 
     def _draw_hand(self, player):
         font = QFont(PIECE_FONT)
@@ -284,11 +379,6 @@ class PositionView(QGraphicsView):
     def __init__(self, scene):
         super().__init__(scene)
 
-        status = scene.status()
-        title = '{} - '.format(status) if status else ''
-        title += '{}'.format(Position.player_name(scene.player_to_move()))
-        self.setWindowTitle(title)
-
         self.setFrameStyle(0)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -314,6 +404,13 @@ class PositionView(QGraphicsView):
             self.scene().toggle_board_labels()
             self._resize()
 
+    def update_title(self):
+        status = self.scene().status()
+        title = '{} - '.format(status) if status else ''
+        title += '{}'.format(Position.player_name(
+                self.scene().player_to_move()))
+        self.setWindowTitle(title)
+
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
@@ -326,6 +423,6 @@ if __name__ == '__main__':
 
     position = Position(sys.argv[1], Pieces())
     view = PositionView(PositionScene(position))
-
+    view.update_title()
     view.show()
     sys.exit(app.exec_())
