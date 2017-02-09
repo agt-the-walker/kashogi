@@ -3,7 +3,7 @@
 import signal
 import sys
 
-from PyQt5.QtCore import Qt, QRectF
+from PyQt5.QtCore import Qt, QPointF, QRectF
 from PyQt5.QtGui import QBrush, QFont, QFontMetrics, QPainter, QPen, QTransform
 from PyQt5.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, \
                             QGraphicsSimpleTextItem, QGraphicsItemGroup, \
@@ -32,7 +32,7 @@ GHOST_OPACITY = 0.4
 class QGraphicsItemParent(QGraphicsItem):
     def __init__(self):
         super().__init__()
-        self._squares = {}
+        self._data = {}
 
     def boundingRect(self, *args):
         return QRectF()
@@ -40,11 +40,11 @@ class QGraphicsItemParent(QGraphicsItem):
     def paint(self, *args):
         pass
 
-    def get(self, square):
-        return self._squares.get(square)
+    def get(self, key):
+        return self._data.get(key)
 
-    def put(self, square, item):
-        self._squares[square] = item
+    def put(self, key, value):
+        self._data[key] = value
 
 
 class QGraphicsPieceItem(QGraphicsSimpleTextItem):
@@ -86,6 +86,53 @@ class QGraphicsPieceItem(QGraphicsSimpleTextItem):
                                                             player))
             else:
                 self.scene().move(square, dest_square)
+
+
+class QGraphicsDropItem(QGraphicsSimpleTextItem):
+    def __init__(self, text, parent, position, index, abbrev, board_pieces):
+        super().__init__(text, parent)
+        self._position = position
+        self._coordinates = Coordinates(position.num_files, position.num_ranks)
+
+        self._index = index
+        self._abbrev = abbrev
+        self._board_pieces = board_pieces
+        self._ghost = None
+
+    @property
+    def abbrev(self):
+        return self._abbrev
+
+    def mousePressEvent(self, event):
+        if (self.flags() & QGraphicsItem.ItemIsMovable) and \
+           event.button() == Qt.LeftButton:
+            player = self._position.player_to_move
+            self._ghost = self.scene().draw_piece_in_hand(player, self._index,
+                                                          self._abbrev, True)
+            self._old_pos = self.pos()
+
+        super().mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        super().mouseReleaseEvent(event)
+
+        if self._ghost:
+            self.scene().removeItem(self._ghost)
+            self._ghost = None
+
+            player = self._position.player_to_move
+            pos = self._board_pieces.mapToScene(self.scenePos())
+            if player == 1:
+                pos -= QPointF(self.boundingRect().width(),
+                               self.boundingRect().height())
+            dest_square = self._coordinates.pos_to_square(pos, self, player)
+
+            if dest_square not in \
+                    position.legal_drops_with_piece(self._abbrev):
+                # restore initial position
+                self.setPos(self._old_pos)
+            else:
+                self.scene().drop(self._abbrev, dest_square)
 
 
 class PositionScene(QGraphicsScene):
@@ -166,18 +213,32 @@ class PositionScene(QGraphicsScene):
             abbrev = piece.upper()
             player = 0 if abbrev == piece else 1
 
-            if player == self.player_to_move():
-                try:
-                    next(position.legal_moves_from_square(piece_item.square))
-                    piece_item.setFlag(QGraphicsItem.ItemIsMovable)
-                    continue
-                except StopIteration:
-                    pass
+            self._update_movable(
+                player, piece_item,
+                lambda: position.legal_moves_from_square(piece_item.square))
 
-            piece_item.setFlag(QGraphicsItem.ItemIsMovable, False)
+        for player in range(Position.NUM_PLAYERS):
+            for drop_item in self._hands[player].childItems():
+                if type(drop_item) is not QGraphicsDropItem:
+                    continue
+
+                self._update_movable(
+                    player, drop_item,
+                    lambda: position.legal_drops_with_piece(drop_item.abbrev))
 
         if self.views():
             self.views()[0].update_title()
+
+    def _update_movable(self, player, item, generator):
+        if player == self.player_to_move():
+            try:
+                next(generator())
+                item.setFlag(QGraphicsItem.ItemIsMovable)
+                return
+            except StopIteration:
+                pass
+
+        item.setFlag(QGraphicsItem.ItemIsMovable, False)
 
     def _draw_board_grid(self):
         pen = QPen()
@@ -274,6 +335,15 @@ class PositionScene(QGraphicsScene):
 
         self.prepare_next_move()
 
+    def drop(self, abbrev, dest_square):
+        player = self.player_to_move()
+        position.drop(abbrev, dest_square)
+
+        self._redraw_hand(player)
+        self._board_pieces.put(dest_square, self.draw_board_piece(dest_square))
+
+        self.prepare_next_move()
+
     def _redraw_board_labels(self):
         font = QFont(LABEL_FONT)
         font.setPixelSize(LABEL_SIZE)
@@ -326,11 +396,11 @@ class PositionScene(QGraphicsScene):
         self.removeItem(self._hands[player])
         self._draw_hand(player)
         self._update_hands()
-        self.views()[0].resize()
+
+        self.setSceneRect(self.itemsBoundingRect())  # since hand may shrink
+        self.views()[0].resize()                     # or grow
 
     def _draw_hand(self, player):
-        font = QFont(PIECE_FONT)
-
         self._hands[player] = QGraphicsItemParent()
 
         position = self._position
@@ -339,22 +409,30 @@ class PositionScene(QGraphicsScene):
         index = 0
         for abbrev in reversed(position.droppable_pieces):
             if abbrev in hand:
-                self._draw_piece_in_hand(font, player, index, abbrev)
+                self._hands[player].put(
+                        abbrev,
+                        self.draw_piece_in_hand(player, index, abbrev))
                 index += 1
 
         self.addItem(self._hands[player])
 
-    def _draw_piece_in_hand(self, font, player, index, abbrev):
+    def draw_piece_in_hand(self, player, index, abbrev, ghost=False):
         position = self._position
         kanji = position.pieces.kanji(abbrev)
 
         column, row = divmod(index, position.num_ranks - 1)
         row = (position.num_ranks - 1) - row  # 0 is bottom row
 
-        piece = QGraphicsSimpleTextItem(kanji, self._hands[player])
+        font = QFont(PIECE_FONT)
+
+        text = QGraphicsDropItem(kanji, self._hands[player], position, index,
+                                 abbrev, self._board_pieces)
         font.setPixelSize(PIECE_IN_HAND_SIZE)
-        piece.setFont(font)
-        piece.setPos(column * SQUARE_SIZE, row * SQUARE_SIZE)
+        text.setFont(font)
+        text.setPos(column * SQUARE_SIZE, row * SQUARE_SIZE)
+        if ghost:
+            text.setOpacity(GHOST_OPACITY)
+            return text
 
         num = QGraphicsSimpleTextItem(str(position.in_hand(player)[abbrev]),
                                       self._hands[player])
@@ -363,6 +441,8 @@ class PositionScene(QGraphicsScene):
         num.setPos((column + 1) * SQUARE_SIZE - num.boundingRect().width()
                    - NUM_IN_HAND_OFFSET,
                    (row + 1) * SQUARE_SIZE - num.boundingRect().height())
+
+        return text
 
     def _rank_label_span(self):
         return LABEL_OFFSET + self._max_label_width
