@@ -9,7 +9,7 @@ from position import Position
 
 
 class Item:
-    def boundingRect(self):
+    def sceneBoundingRect(self):
         return QRectF(0, 0, 17, 21)
 
 

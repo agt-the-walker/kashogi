@@ -110,6 +110,7 @@ class QGraphicsDropItem(QGraphicsSimpleTextItem):
             self._ghost = self.scene().draw_piece_in_hand(player, self._index,
                                                           self._abbrev, True)
             self._old_pos = self.pos()
+            self.setScale(PIECE_SIZE / PIECE_IN_HAND_SIZE)
 
         super().mousePressEvent(event)
 
@@ -123,14 +124,15 @@ class QGraphicsDropItem(QGraphicsSimpleTextItem):
             player = self._position.player_to_move
             pos = self._board_pieces.mapToScene(self.scenePos())
             if player == 1:
-                pos -= QPointF(self.boundingRect().width(),
-                               self.boundingRect().height())
+                pos -= QPointF(self.sceneBoundingRect().width(),
+                               self.sceneBoundingRect().height())
             dest_square = self._coordinates.pos_to_square(pos, self, player)
 
             if dest_square not in \
                     position.legal_drops_with_piece(self._abbrev):
-                # restore initial position
+                # restore initial position and size
                 self.setPos(self._old_pos)
+                self.setScale(1)
             else:
                 self.scene().drop(self._abbrev, dest_square)
 
@@ -430,6 +432,7 @@ class PositionScene(QGraphicsScene):
         font.setPixelSize(PIECE_IN_HAND_SIZE)
         text.setFont(font)
         text.setPos(column * SQUARE_SIZE, row * SQUARE_SIZE)
+        text.setTransformOriginPoint(text.boundingRect().center())
         if ghost:
             text.setOpacity(GHOST_OPACITY)
             return text

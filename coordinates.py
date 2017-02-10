@@ -21,16 +21,17 @@ class Coordinates:
         file, rank = square
         piece_offset = PIECE_OFFSET if player == 0 else -PIECE_OFFSET
         return QPointF(LINE_OFFSET + (self._num_files - file + 0.5) *
-                       SQUARE_SIZE - item.boundingRect().width() / 2,
+                       SQUARE_SIZE - item.sceneBoundingRect().width() / 2,
                        LINE_OFFSET + (rank - 0.5) * SQUARE_SIZE
-                       + piece_offset - item.boundingRect().height() / 2)
+                       + piece_offset - item.sceneBoundingRect().height() / 2)
 
     def pos_to_square(self, pos, item, player):
         piece_offset = PIECE_OFFSET if player == 0 else -PIECE_OFFSET
         return (round(- (pos.x() - LINE_OFFSET
-                      + item.boundingRect().width() / 2) / SQUARE_SIZE
+                      + item.sceneBoundingRect().width() / 2) / SQUARE_SIZE
                       + self._num_files + 0.5),
-                round((pos.y() - LINE_OFFSET + item.boundingRect().height() / 2
+                round((pos.y() - LINE_OFFSET
+                      + item.sceneBoundingRect().height() / 2
                       - piece_offset) / SQUARE_SIZE + 0.5))
 
     @staticmethod
