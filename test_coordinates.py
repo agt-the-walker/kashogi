@@ -26,7 +26,7 @@ class CoordinatesTestCase(unittest.TestCase):
         for file in range(1, self.NUM_FILES+1):
             for rank in range(1, self.NUM_RANKS+1):
                 for player in range(Position.NUM_PLAYERS):
-                    square = (file, rank)
+                    square = file, rank
                     pos = self._coordinates.square_to_pos(square,
                             self._item, player)                         # noqa
                     actual_square = self._coordinates.pos_to_square(pos,

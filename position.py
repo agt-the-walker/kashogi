@@ -123,7 +123,7 @@ class Position:
             if self._royal_squares[player]:
                 raise ValueError('Too many royal pieces for {}'
                                  .format(self.player_name(player)))
-            self._royal_squares[player] = (file, rank)
+            self._royal_squares[player] = file, rank
 
         max_per_file = self._pieces.max_per_file(abbrev)
         if max_per_file:
@@ -479,7 +479,7 @@ class Position:
 
         for rank in range(1, self._num_ranks+1):
             for file in range(1, self._num_files+1):
-                square = (file, rank)
+                square = file, rank
                 if self._board.get(square):
                     continue  # not empty
 

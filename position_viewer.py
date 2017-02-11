@@ -286,7 +286,7 @@ class PositionScene(QGraphicsScene):
 
         for file in range(1, position.num_files+1):
             for rank in range(1, position.num_ranks+1):
-                square = ((file, rank))
+                square = file, rank
                 piece = position.get(square)
                 if piece:
                     self._board_pieces.put(square,
