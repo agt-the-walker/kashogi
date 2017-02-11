@@ -256,7 +256,12 @@ class Position:
     def move(self, square, dest_square, promotes=False):
         if dest_square not in self.legal_moves_from_square(square):
             raise ValueError('Illegal move')
-        if promotes not in self.promotions(square, dest_square):
+
+        possible_promotions = self.promotions(square, dest_square)
+        if promotes is None:
+            if len(possible_promotions) < 2:
+                raise ValueError('Undefined promotion')
+        elif promotes not in self.promotions(square, dest_square):
             raise ValueError('Illegal promotion')
 
         player = self._player_to_move
@@ -264,17 +269,9 @@ class Position:
         # perform the move
         piece = self._board.pop(square)
         captured_piece = self._board.get(dest_square)
+        self._board[dest_square] = piece
         if promotes:
-            self._board[dest_square] = self._pieces.promoted(piece)
-
-            # update statistics
-            abbrev = piece.upper()
-            max_per_file = self._pieces.max_per_file(abbrev)
-            if max_per_file:
-                file, _ = square
-                self._num_per_file[player][abbrev][file] -= 1
-        else:
-            self._board[dest_square] = piece
+            self._promotes(square, dest_square)
 
         # captured piece goes in hand
         if captured_piece:
@@ -293,7 +290,11 @@ class Position:
                 opponent = self.NUM_PLAYERS - player - 1
                 self._num_per_file[opponent][captured_abbrev][file] -= 1
 
-        self._end_turn()
+        # end turn unless promotion is deferred
+        if promotes is None:
+            self._movement = [square, dest_square]
+        else:
+            self._end_turn()
 
     def legal_moves_from_square(self, square, player=None):
         if player is None:
@@ -429,6 +430,26 @@ class Position:
             result[coordinate] = effective_range
 
         return result
+
+    def choose_promotion(self, promotes):
+        if promotes:
+            self._promotes(*self._movement)
+        del self._movement
+
+        self._end_turn()
+
+    def _promotes(self, square, dest_square):
+        player = self._player_to_move
+
+        piece = self._board.pop(dest_square)
+        self._board[dest_square] = self._pieces.promoted(piece)
+
+        # update statistics
+        abbrev = piece.upper()
+        max_per_file = self._pieces.max_per_file(abbrev)
+        if max_per_file:
+            file, _ = square
+            self._num_per_file[player][abbrev][file] -= 1
 
     def drop(self, abbrev, dest_square):
         if dest_square not in self.legal_drops_with_piece(abbrev):

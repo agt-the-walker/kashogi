@@ -430,6 +430,21 @@ class PositionTestCase(unittest.TestCase):
         self.assertEqual(str(position), '1+Lk/3/K2 w R')
         self.assertEqual(position.status(), 'check')
 
+    def test_deferred_promotion(self):
+        sfen = '2k/SPs/K2 b -'
+        position = self.check(sfen)
+
+        with self.assertRaisesRegex(ValueError, 'Undefined promotion'):
+            position.move((2, 2), (2, 1), None)  # must promote
+
+        position.move((3, 2), (3, 1), None)  # can promote
+        position.choose_promotion(True)      # yes please
+        self.assertEqual(str(position), '+S1k/1Ps/K2 w -')
+
+        position.move((1, 2), (1, 3), None)  # can promote
+        position.choose_promotion(False)     # no thanks
+        self.assertEqual(str(position), '+S1k/1P1/K1s b -')
+
     def check(self, sfen, expected_num_files=3, expected_num_ranks=3,
               expected_sfen=None, expected_status=''):
         position = Position(sfen, self._pieces)

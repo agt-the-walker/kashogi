@@ -7,7 +7,7 @@ from PyQt5.QtCore import Qt, QPointF, QRectF
 from PyQt5.QtGui import QBrush, QFont, QFontMetrics, QPainter, QPen, QTransform
 from PyQt5.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, \
                             QGraphicsSimpleTextItem, QGraphicsItemGroup, \
-                            QGraphicsItem
+                            QGraphicsItem, QMessageBox
 
 from pieces import Pieces
 from position import Position
@@ -320,9 +320,12 @@ class PositionScene(QGraphicsScene):
     def move(self, square, dest_square):
         player = self.player_to_move()
 
-        # XXX: show a dialog box instead of auto-promoting
         promotions = position.promotions(square, dest_square)
-        position.move(square, dest_square, promotions[0])
+        if promotions == [False, True]:
+            promotes = None
+        else:
+            promotes = promotions[0]
+        position.move(square, dest_square, promotes)
 
         piece_item = self._board_pieces.get(square)
         self.removeItem(piece_item)
@@ -334,6 +337,15 @@ class PositionScene(QGraphicsScene):
             self._redraw_hand(player)
 
         self._board_pieces.put(dest_square, self.draw_board_piece(dest_square))
+
+        if promotes is None:
+            promotes = QMessageBox.question(None, 'Optional promotion',
+                                            'Promotes?') == QMessageBox.Yes
+            position.choose_promotion(promotes)
+            if promotes:
+                self.removeItem(self._board_pieces.get(dest_square))
+                self._board_pieces.put(dest_square,
+                                       self.draw_board_piece(dest_square))
 
         self.prepare_next_move()
 
