@@ -36,6 +36,7 @@ class PositionTestCase(unittest.TestCase):
     def test_game_win_by_stalemate(self):
         game = Game('1k1/3/1K1 b BD@', self._pieces, True)
         game.drop('BD', (2, 2))
+        self.assertEqual(game.half_moves, 1)
         self.assertEqual(game.status(), 'stalemate')
         self.assertEqual(game.result(), 0)
 
@@ -52,6 +53,7 @@ class PositionTestCase(unittest.TestCase):
             game.move((3, 1), (3, 2))
             self.assertIsNone(game.result())
             game.move((1, 3), (1, 2))
+        self.assertEqual(game.half_moves, 14)
         self.assertEqual(game.result(), game.NUM_PLAYERS)
 
     def test_game_win_due_to_perpetual_check(self):
@@ -94,6 +96,14 @@ class PositionTestCase(unittest.TestCase):
         game.move((2, 2), (3, 2))
         game.move((3, 1), (2, 1))
         self.assertEqual(game.result(), 1)
+
+    def test_game_with_deferred_promotions(self):
+        game = Game('2k/SPs/K2 b -', self._pieces, False)
+        game.move((3, 2), (3, 1), None)  # can promote
+        self.assertEqual(game.half_moves, 0)  # incomplete move
+        game.choose_promotion(True)      # yes please
+        self.assertEqual(game.half_moves, 1)  # move completed
+        self.assertEqual(game.sfen, '+S1k/1Ps/K2 w -')
 
 
 if __name__ == '__main__':

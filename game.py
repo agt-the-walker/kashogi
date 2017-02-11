@@ -22,6 +22,14 @@ class Game:
     def __getattr__(self, name):
         return getattr(self._position, name)
 
+    @property
+    def half_moves(self):
+        return self._half_moves
+
+    @property
+    def sfen(self):
+        return self._sfen
+
     def result(self):
         opponent = self.NUM_PLAYERS - self.player_to_move - 1
 
@@ -34,6 +42,11 @@ class Game:
 
     def move(self, square, dest_square, promotes=False):
         self._position.move(square, dest_square, promotes)
+        if promotes is not None:
+            self._update_history()
+
+    def choose_promotion(self, promotes):
+        self._position.choose_promotion(promotes)
         self._update_history()
 
     def drop(self, abbrev, dest_square):
