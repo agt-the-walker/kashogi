@@ -153,6 +153,9 @@ class PositionTestCase(unittest.TestCase):
     def test_in_double_check(self):
         self.check('k2/1B1/3/L2 w -', 3, 4, expected_status='check')
 
+    def test_check_blocked_by_enemy_piece(self):
+        self.check('4/+R+P1k/4 w -', 4, 3)
+
     def test_elementary_checkmate(self):
         self.check('R1k/3/b1K w -', expected_status='checkmate')  # with rook
         self.check('2k/1g1/2K b -', expected_status='checkmate')  # with gold

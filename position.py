@@ -226,6 +226,8 @@ class Position:
                 if piece_range == 0 or piece_range >= range:
                     # my piece has enough range to check him
                     return abbrev
+                else:
+                    break
 
     def status(self):
         try:
