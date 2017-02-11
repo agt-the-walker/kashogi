@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import signal
 import sys
 
@@ -138,9 +139,11 @@ class QGraphicsDropItem(QGraphicsSimpleTextItem):
 
 
 class PositionScene(QGraphicsScene):
-    def __init__(self, position):
+    def __init__(self, position, verbose):
         super().__init__()
         self._position = position
+        self._verbose = verbose
+
         self._coordinates = Coordinates(position.num_files, position.num_ranks)
         self.bottom_player = self.player_to_move()
 
@@ -230,6 +233,8 @@ class PositionScene(QGraphicsScene):
 
         if self.views():
             self.views()[0].update_title()
+        if self._verbose:
+            print(position)
 
     def _update_movable(self, player, item, generator):
         if player == self.player_to_move():
@@ -509,16 +514,19 @@ class PositionView(QGraphicsView):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        sys.exit('Usage: {} <sfen>'.format(sys.argv[0]))
+    parser = argparse.ArgumentParser()
+    parser.add_argument('sfen', help='SFEN position')
+    parser.add_argument('--verbose', '-v', action='store_true',
+                        help='show SFEN position after each move/drop')
+    args = parser.parse_args()
 
     signal.signal(signal.SIGINT, signal.SIG_DFL)
 
     app = QApplication(sys.argv)
     scene = QGraphicsScene()
 
-    position = Position(sys.argv[1], Pieces())
-    view = PositionView(PositionScene(position))
+    position = Position(args.sfen, Pieces())
+    view = PositionView(PositionScene(position, args.verbose))
     view.update_title()
     view.show()
     sys.exit(app.exec_())
