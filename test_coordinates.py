@@ -32,6 +32,8 @@ class CoordinatesTestCase(unittest.TestCase):
                     actual_square = self._coordinates.pos_to_square(pos,
                             self._item, player)                         # noqa
                     self.assertEqual(square, actual_square)
+                    rect = self._coordinates.square_to_rect(square)
+                    self.assertTrue(rect.contains(pos))
 
     def test_rank_label(self):
         self.assertEqual(self._coordinates.rank_label(1), 'a')

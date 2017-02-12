@@ -5,10 +5,11 @@ import signal
 import sys
 
 from PyQt5.QtCore import Qt, QPointF, QRectF
-from PyQt5.QtGui import QBrush, QFont, QFontMetrics, QPainter, QPen, QTransform
+from PyQt5.QtGui import QBrush, QColor, QFont, QFontMetrics, QPainter, QPen, \
+                        QTransform
 from PyQt5.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, \
                             QGraphicsSimpleTextItem, QGraphicsItemGroup, \
-                            QGraphicsItem, QMessageBox
+                            QGraphicsItem, QGraphicsRectItem, QMessageBox
 
 from pieces import Pieces
 from position import Position
@@ -64,7 +65,12 @@ class QGraphicsPieceItem(QGraphicsSimpleTextItem):
     def mousePressEvent(self, event):
         if (self.flags() & QGraphicsItem.ItemIsMovable) and \
            event.button() == Qt.LeftButton:
+            position = self._position
+
             self._ghost = self.scene().draw_board_piece(self._square, True)
+            self._legal_moves = \
+                list(position.legal_moves_from_square(self._square))
+            self.scene().highlight(self._legal_moves, True)
 
         super().mousePressEvent(event)
 
@@ -74,14 +80,14 @@ class QGraphicsPieceItem(QGraphicsSimpleTextItem):
         if self._ghost:
             self.scene().removeItem(self._ghost)
             self._ghost = None
+            self.scene().highlight(self._legal_moves, False)
 
-            position = self._position
             player = self._position.player_to_move
             square = self._square
             dest_square = self._coordinates.pos_to_square(self.pos(), self,
                                                           player)
 
-            if dest_square not in position.legal_moves_from_square(square):
+            if dest_square not in self._legal_moves:
                 # restore initial position
                 self.setPos(self._coordinates.square_to_pos(square, self,
                                                             player))
@@ -108,8 +114,13 @@ class QGraphicsDropItem(QGraphicsSimpleTextItem):
         if (self.flags() & QGraphicsItem.ItemIsMovable) and \
            event.button() == Qt.LeftButton:
             player = self._position.player_to_move
+            position = self._position
+
             self._ghost = self.scene().draw_piece_in_hand(player, self._index,
                                                           self._abbrev, True)
+            self._legal_drops = \
+                list(position.legal_drops_with_piece(self._abbrev))
+            self.scene().highlight(self._legal_drops, True)
             self._old_pos = self.pos()
             self.setScale(PIECE_SIZE / PIECE_IN_HAND_SIZE)
 
@@ -121,6 +132,7 @@ class QGraphicsDropItem(QGraphicsSimpleTextItem):
         if self._ghost:
             self.scene().removeItem(self._ghost)
             self._ghost = None
+            self.scene().highlight(self._legal_drops, False)
 
             player = self._position.player_to_move
             pos = self._board_pieces.mapToScene(self.scenePos())
@@ -129,8 +141,7 @@ class QGraphicsDropItem(QGraphicsSimpleTextItem):
                                self.sceneBoundingRect().height())
             dest_square = self._coordinates.pos_to_square(pos, self, player)
 
-            if dest_square not in \
-                    position.legal_drops_with_piece(self._abbrev):
+            if dest_square not in self._legal_drops:
                 # restore initial position and size
                 self.setPos(self._old_pos)
                 self.setScale(1)
@@ -148,6 +159,7 @@ class PositionScene(QGraphicsScene):
         self.bottom_player = self.player_to_move()
 
         self._draw_board_grid()
+        self._draw_board_squares()
         self._draw_board_pieces()
 
         self._redraw_board_labels()
@@ -181,6 +193,7 @@ class PositionScene(QGraphicsScene):
 
     def _update_board_orientation(self):
         self._board_pieces.setRotation(self.bottom_player * 180)
+        self._board_squares.setRotation(self.bottom_player * 180)
 
     def _update_hands(self):
         for player in range(Position.NUM_PLAYERS):
@@ -214,6 +227,9 @@ class PositionScene(QGraphicsScene):
         position = self._position
 
         for piece_item in self._board_pieces.childItems():
+            if type(piece_item) is not QGraphicsPieceItem:
+                continue
+
             piece = position.get(piece_item.square)
             abbrev = piece.upper()
             player = 0 if abbrev == piece else 1
@@ -253,7 +269,7 @@ class PositionScene(QGraphicsScene):
 
         position = self._position
 
-        board = self.addRect(
+        self._board = self.addRect(
             BOARD_STROKE / 2, BOARD_STROKE / 2,
             SQUARE_SIZE * position.num_files + BOARD_STROKE - LINE_STROKE,
             SQUARE_SIZE * position.num_ranks + BOARD_STROKE - LINE_STROKE,
@@ -275,7 +291,28 @@ class PositionScene(QGraphicsScene):
                 LINE_OFFSET + SQUARE_SIZE * rank,
                 pen)
 
-        self._board = board
+    def _draw_board_squares(self):
+        self._board_squares = QGraphicsItemParent()
+        self._board_squares.setTransformOriginPoint(
+                self._board.boundingRect().center())
+
+        highlight_color = QColor(Qt.yellow).lighter()
+        for file in range(1, position.num_files+1):
+            for rank in range(1, position.num_ranks+1):
+                square = file, rank
+                rect = QGraphicsRectItem(
+                        self._coordinates.square_to_rect(square),
+                        self._board_squares)
+                rect.setPen(QPen(Qt.NoPen))
+                rect.setBrush(QBrush(highlight_color))
+                rect.hide()
+                self._board_squares.put(square, rect)
+
+        self.addItem(self._board_squares)
+
+    def highlight(self, squares, visible):
+        for square in squares:
+            self._board_squares.get(square).setVisible(visible)
 
     def _draw_board_pieces(self):
         self._board_pieces = QGraphicsItemParent()

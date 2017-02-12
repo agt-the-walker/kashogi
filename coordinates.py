@@ -2,7 +2,7 @@
 
 from string import ascii_lowercase
 
-from PyQt5.QtCore import QPointF
+from PyQt5.QtCore import QPointF, QRectF
 
 BOARD_STROKE = 2
 LINE_STROKE = 1
@@ -24,6 +24,12 @@ class Coordinates:
                        SQUARE_SIZE - item.sceneBoundingRect().width() / 2,
                        LINE_OFFSET + (rank - 0.5) * SQUARE_SIZE
                        + piece_offset - item.sceneBoundingRect().height() / 2)
+
+    def square_to_rect(self, square):
+        file, rank = square
+        return QRectF(BOARD_STROKE + (self._num_files - file) * SQUARE_SIZE,
+                      BOARD_STROKE + (rank - 1) * SQUARE_SIZE,
+                      SQUARE_SIZE - LINE_STROKE, SQUARE_SIZE - LINE_STROKE)
 
     def pos_to_square(self, pos, item, player):
         piece_offset = PIECE_OFFSET if player == 0 else -PIECE_OFFSET
