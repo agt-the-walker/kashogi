@@ -91,6 +91,7 @@ class QGraphicsPieceItem(QGraphicsSimpleTextItem):
                 # restore initial position
                 self.setPos(self._coordinates.square_to_pos(square, self,
                                                             player))
+                self.scene().refresh()
             else:
                 self.scene().move(square, dest_square)
 
@@ -145,6 +146,7 @@ class QGraphicsDropItem(QGraphicsSimpleTextItem):
                 # restore initial position and size
                 self.setPos(self._old_pos)
                 self.setScale(1)
+                self.scene().refresh()
             else:
                 self.scene().drop(self._abbrev, dest_square)
 
@@ -221,7 +223,7 @@ class PositionScene(QGraphicsScene):
 
         self._has_board_labels = not self._has_board_labels
 
-        self.setSceneRect(self.itemsBoundingRect())
+        self.refresh()
 
     def prepare_next_move(self):
         position = self._position
@@ -378,6 +380,7 @@ class PositionScene(QGraphicsScene):
             self.removeItem(captured_piece_item)
             self._redraw_hand(player)
 
+        self.refresh()
         self._board_pieces.put(dest_square, self.draw_board_piece(dest_square))
 
         if promotes is None:
@@ -396,9 +399,15 @@ class PositionScene(QGraphicsScene):
         position.drop(abbrev, dest_square)
 
         self._redraw_hand(player)
+
+        self.refresh()
         self._board_pieces.put(dest_square, self.draw_board_piece(dest_square))
 
         self.prepare_next_move()
+
+    def refresh(self):
+        self.setSceneRect(self.itemsBoundingRect())
+        self.views()[0].resize()
 
     def _redraw_board_labels(self):
         font = QFont(LABEL_FONT)
@@ -452,9 +461,6 @@ class PositionScene(QGraphicsScene):
         self.removeItem(self._hands[player])
         self._draw_hand(player)
         self._update_hands()
-
-        self.setSceneRect(self.itemsBoundingRect())  # since hand may shrink
-        self.views()[0].resize()                     # or grow
 
     def _draw_hand(self, player):
         self._hands[player] = QGraphicsItemParent()
@@ -540,7 +546,6 @@ class PositionView(QGraphicsView):
             self.scene().flip_view()
         elif event.text() == 'l':
             self.scene().toggle_board_labels()
-            self.resize()
 
     def update_title(self):
         status = self.scene().status()
