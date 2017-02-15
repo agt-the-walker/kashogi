@@ -172,7 +172,7 @@ class PositionScene(QGraphicsScene):
             self._draw_hand(player)
         self._update_hands()
 
-        self.prepare_next_move()
+        self._prepare_next_move()
 
     def player_to_move(self):
         return self._position.player_to_move
@@ -225,7 +225,7 @@ class PositionScene(QGraphicsScene):
 
         self.refresh()
 
-    def prepare_next_move(self):
+    def _prepare_next_move(self):
         position = self._position
 
         for piece_item in self._board_pieces.childItems():
@@ -392,7 +392,7 @@ class PositionScene(QGraphicsScene):
                 self._board_pieces.put(dest_square,
                                        self.draw_board_piece(dest_square))
 
-        self.prepare_next_move()
+        self._prepare_next_move()
 
     def drop(self, abbrev, dest_square):
         player = self.player_to_move()
@@ -403,7 +403,7 @@ class PositionScene(QGraphicsScene):
         self.refresh()
         self._board_pieces.put(dest_square, self.draw_board_piece(dest_square))
 
-        self.prepare_next_move()
+        self._prepare_next_move()
 
     def refresh(self):
         self.setSceneRect(self.itemsBoundingRect())
