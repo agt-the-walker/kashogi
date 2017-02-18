@@ -5,7 +5,7 @@ import re
 
 class Betza:
     def __init__(self, notation):
-        tokens = re.findall("([a-z]*)([A-Z])([1-9][0-9]*)?", notation)
+        tokens = re.findall("([a-z]*)([A-Z])(\d+)?", notation)
         if not tokens:
             raise ValueError('No token found')
 
