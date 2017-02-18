@@ -13,8 +13,8 @@ class BetzaTestCase(unittest.TestCase):
             Betza('#!')
 
     def test_invalid_piece(self):
-        with self.assertRaisesRegex(ValueError, 'Unknown piece: C'):
-            Betza('C')
+        with self.assertRaisesRegex(ValueError, 'Unknown piece: S'):
+            Betza('S')
 
     def test_notation_order_on_dragon(self):
         expected = {(-1,  1): 1, (0,  1): 0, (1,  1): 1,
@@ -167,6 +167,15 @@ class BetzaTestCase(unittest.TestCase):
                    {(-1, 2): 1, (1, 2): 1},
                    False, 2, True, False)
 
+    def test_spanish_lion(self):
+        self.check('CH',
+                {             (-1,  3): 1, (0,  3): 1, (1,  3): 1,     # noqa
+                 (-3,  1): 1,                                      (3,  1): 1,
+                 (-3,  0): 1,                                      (3,  0): 1,
+                 (-3, -1): 1,                                      (3, -1): 1,
+                              (-1, -3): 1, (0, -3): 1, (1, -3): 1},
+                False)
+
     def test_treacherous_fox(self):
         self.check('fbWFfbDA',
                 {(-2,  2): 1,              (0,  2): 1,             (2,  2): 1,
@@ -176,11 +185,25 @@ class BetzaTestCase(unittest.TestCase):
                  (-2, -2): 1,              (0, -2): 1,             (2, -2): 1},
                 False)
 
+    def test_tripper(self):
+        self.check('G',
+                   {(-3,  3): 1, (3,  3): 1,
+                    (-3, -3): 1, (3, -3): 1},
+                   False)
+
     def test_wide_knight(self):
         self.check('llrrN',
                    {(-2,  1): 1, (2,  1): 1,
                     (-2, -1): 1, (2, -1): 1},
                    False)
+
+    def test_zebrarider(self):
+        self.check('Z0',
+                   {(-2,  3): 0,  (2,  3): 0,
+                    (-3,  2): 0,  (3,  2): 0,
+                    (-3, -2): 0,  (3, -2): 0,
+                    (-2, -3): 0,  (2, -3): 0},
+                   True)
 
     def check(self, notation, expected_directions, expected_is_rider,
               expected_num_restricted=0,

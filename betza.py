@@ -36,7 +36,7 @@ class Betza:
     def num_restricted_furthest_ranks(self):
         return max(self._min_dy, 0)
 
-    def _parse(self, modifiers, piece, range):
+    def _parse(self, modifiers, piece, range):  # noqa: C901
         if not range:
             if piece in ['B', 'Q', 'R']:
                 range = 0  # i.e. unlimited rider
@@ -49,8 +49,14 @@ class Betza:
             self._add_movement(2, 2, modifiers, range)
         elif piece in ['B', 'F']:
             self._add_movement(1, 1, modifiers, range)
+        elif piece == 'C':
+            self._add_movement(1, 3, modifiers, range)
         elif piece == 'D':
             self._add_movement(0, 2, modifiers, range)
+        elif piece == 'G':
+            self._add_movement(3, 3, modifiers, range)
+        elif piece == 'H':
+            self._add_movement(0, 3, modifiers, range)
         elif piece in ['K', 'Q']:
             self._add_movement(0, 1, modifiers, range)
             self._add_movement(1, 1, modifiers, range)
@@ -58,6 +64,8 @@ class Betza:
             self._add_movement(1, 2, modifiers, range)
         elif piece in ['R', 'W']:
             self._add_movement(0, 1, modifiers, range)
+        elif piece == 'Z':
+            self._add_movement(2, 3, modifiers, range)
         else:
             raise ValueError('Unknown piece: ' + piece)
 
