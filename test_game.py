@@ -11,12 +11,6 @@ class PositionTestCase(unittest.TestCase):
     def setUpClass(cls):
         cls._pieces = Pieces()
 
-    def test_game_already_won_by_normal_means(self):
-        for try_rule in [False, True]:
-            with self.assertRaisesRegex(
-                    ValueError, 'Game is already won by 0 \(checkmate\)'):
-                Game('1k1/1G1/1K1 w -', self._pieces, try_rule)
-
     def test_game_win_by_try_rule(self):
         for try_rule in [False, True]:
             game = Game('1k1/3/1K1 w -', self._pieces, try_rule)

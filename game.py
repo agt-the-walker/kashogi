@@ -15,11 +15,6 @@ class Game:
 
         self._update_history()
 
-        result, reason = self.result()
-        if result is not None:
-            raise ValueError('Game is already won by {} ({})'.format(
-                             result, reason))
-
     def __getattr__(self, name):
         return getattr(self._position, name)
 

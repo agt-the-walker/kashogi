@@ -227,8 +227,8 @@ class GameScene(QGraphicsScene):
         self.refresh()
 
     def _prepare_next_move(self):
-        self._check_result()
         game = self._game
+        self._winner, self._result_reason = game.result()
 
         for piece_item in self._board_pieces.childItems():
             if type(piece_item) is not QGraphicsPieceItem:
@@ -252,13 +252,16 @@ class GameScene(QGraphicsScene):
                     lambda: game.legal_drops_with_piece(drop_item.abbrev))
 
         if self.views():
-            self.views()[0].update_title()
+            self.show_status_and_result()
         if self._verbose:
             print(game.sfen)
 
-    def _check_result(self):
-        game = self._game
-        self._winner, reason = game.result()
+    def show_status_and_result(self):
+        status = self.status()
+        title = '{} - '.format(status) if status else ''
+        title += '{}'.format(Position.player_name(self.player_to_move()))
+        self.views()[0].setWindowTitle(title)
+
         if self._winner is None:
             return
 
@@ -267,7 +270,7 @@ class GameScene(QGraphicsScene):
         else:
             message = '{} won'.format(game.player_name(self._winner)
                                           .capitalize())
-        message += ' ({})'.format(reason)
+        message += ' ({})'.format(self._result_reason)
 
         QMessageBox.information(None, 'Game result', message)
 
@@ -564,13 +567,6 @@ class GameView(QGraphicsView):
         elif event.text() == 'l':
             self.scene().toggle_board_labels()
 
-    def update_title(self):
-        status = self.scene().status()
-        title = '{} - '.format(status) if status else ''
-        title += '{}'.format(Position.player_name(
-                self.scene().player_to_move()))
-        self.setWindowTitle(title)
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -584,10 +580,11 @@ if __name__ == '__main__':
     signal.signal(signal.SIGINT, signal.SIG_DFL)
 
     app = QApplication(sys.argv)
-    scene = QGraphicsScene()
 
     game = Game(args.sfen, Pieces(), not(args.no_try))
-    view = GameView(GameScene(game, args.verbose))
-    view.update_title()
+    scene = GameScene(game, args.verbose)
+    view = GameView(scene)
+
     view.show()
+    scene.show_status_and_result()
     sys.exit(app.exec_())
