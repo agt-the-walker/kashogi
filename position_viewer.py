@@ -11,6 +11,7 @@ from PyQt5.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, \
                             QGraphicsSimpleTextItem, QGraphicsItemGroup, \
                             QGraphicsItem, QGraphicsRectItem, QMessageBox
 
+from game import Game
 from pieces import Pieces
 from position import Position
 from coordinates import BOARD_STROKE, LINE_OFFSET, LINE_STROKE, SQUARE_SIZE, \
@@ -50,10 +51,10 @@ class QGraphicsItemParent(QGraphicsItem):
 
 
 class QGraphicsPieceItem(QGraphicsSimpleTextItem):
-    def __init__(self, text, parent, position, square):
+    def __init__(self, text, parent, game, square):
         super().__init__(text, parent)
-        self._position = position
-        self._coordinates = Coordinates(position.num_files, position.num_ranks)
+        self._game = game
+        self._coordinates = Coordinates(game.num_files, game.num_ranks)
 
         self._square = square
         self._ghost = None
@@ -65,11 +66,11 @@ class QGraphicsPieceItem(QGraphicsSimpleTextItem):
     def mousePressEvent(self, event):
         if (self.flags() & QGraphicsItem.ItemIsMovable) and \
            event.button() == Qt.LeftButton:
-            position = self._position
+            game = self._game
 
             self._ghost = self.scene().draw_board_piece(self._square, True)
             self._legal_moves = \
-                list(position.legal_moves_from_square(self._square))
+                list(game.legal_moves_from_square(self._square))
             self.scene().highlight(self._legal_moves, True)
 
         super().mousePressEvent(event)
@@ -82,7 +83,7 @@ class QGraphicsPieceItem(QGraphicsSimpleTextItem):
             self._ghost = None
             self.scene().highlight(self._legal_moves, False)
 
-            player = self._position.player_to_move
+            player = self._game.player_to_move
             square = self._square
             dest_square = self._coordinates.pos_to_square(self.pos(), self,
                                                           player)
@@ -97,10 +98,10 @@ class QGraphicsPieceItem(QGraphicsSimpleTextItem):
 
 
 class QGraphicsDropItem(QGraphicsSimpleTextItem):
-    def __init__(self, text, parent, position, index, abbrev, board_pieces):
+    def __init__(self, text, parent, game, index, abbrev, board_pieces):
         super().__init__(text, parent)
-        self._position = position
-        self._coordinates = Coordinates(position.num_files, position.num_ranks)
+        self._game = game
+        self._coordinates = Coordinates(game.num_files, game.num_ranks)
 
         self._index = index
         self._abbrev = abbrev
@@ -114,13 +115,13 @@ class QGraphicsDropItem(QGraphicsSimpleTextItem):
     def mousePressEvent(self, event):
         if (self.flags() & QGraphicsItem.ItemIsMovable) and \
            event.button() == Qt.LeftButton:
-            player = self._position.player_to_move
-            position = self._position
+            player = self._game.player_to_move
+            game = self._game
 
             self._ghost = self.scene().draw_piece_in_hand(player, self._index,
                                                           self._abbrev, True)
             self._legal_drops = \
-                list(position.legal_drops_with_piece(self._abbrev))
+                list(game.legal_drops_with_piece(self._abbrev))
             self.scene().highlight(self._legal_drops, True)
             self._old_pos = self.pos()
             self.setScale(PIECE_SIZE / PIECE_IN_HAND_SIZE)
@@ -135,7 +136,7 @@ class QGraphicsDropItem(QGraphicsSimpleTextItem):
             self._ghost = None
             self.scene().highlight(self._legal_drops, False)
 
-            player = self._position.player_to_move
+            player = self._game.player_to_move
             pos = self._board_pieces.mapToScene(self.scenePos())
             if player == 1:
                 pos -= QPointF(self.sceneBoundingRect().width(),
@@ -151,13 +152,13 @@ class QGraphicsDropItem(QGraphicsSimpleTextItem):
                 self.scene().drop(self._abbrev, dest_square)
 
 
-class PositionScene(QGraphicsScene):
-    def __init__(self, position, verbose):
+class GameScene(QGraphicsScene):
+    def __init__(self, game, verbose):
         super().__init__()
-        self._position = position
+        self._game = game
         self._verbose = verbose
 
-        self._coordinates = Coordinates(position.num_files, position.num_ranks)
+        self._coordinates = Coordinates(game.num_files, game.num_ranks)
         self.bottom_player = self.player_to_move()
 
         self._draw_board_grid()
@@ -167,21 +168,21 @@ class PositionScene(QGraphicsScene):
         self._redraw_board_labels()
         self._has_board_labels = True
 
-        self._hands = [None] * Position.NUM_PLAYERS
-        for player in range(Position.NUM_PLAYERS):
+        self._hands = [None] * game.NUM_PLAYERS
+        for player in range(game.NUM_PLAYERS):
             self._draw_hand(player)
         self._update_hands()
 
         self._prepare_next_move()
 
     def player_to_move(self):
-        return self._position.player_to_move
+        return self._game.player_to_move
 
     def status(self):
-        return self._position.status()
+        return self._game.status()
 
     def flip_view(self):
-        self.bottom_player = Position.NUM_PLAYERS - self.bottom_player - 1
+        self.bottom_player = self._game.NUM_PLAYERS - self.bottom_player - 1
         self._update_board_orientation()
 
         if self._has_board_labels:
@@ -198,7 +199,7 @@ class PositionScene(QGraphicsScene):
         self._board_squares.setRotation(self.bottom_player * 180)
 
     def _update_hands(self):
-        for player in range(Position.NUM_PLAYERS):
+        for player in range(self._game.NUM_PLAYERS):
             if player == self.bottom_player:
                 x = self._board.boundingRect().width() + PIECE_IN_HAND_OFFSET
                 if self._has_board_labels:
@@ -207,7 +208,7 @@ class PositionScene(QGraphicsScene):
             else:
                 x = -PIECE_IN_HAND_OFFSET
                 self._hands[player].setTransformOriginPoint(
-                        0, position.num_ranks / 2 * SQUARE_SIZE)
+                        0, game.num_ranks / 2 * SQUARE_SIZE)
                 self._hands[player].setRotation(180)
 
             self._hands[player].setPos(x, LINE_OFFSET)
@@ -226,36 +227,52 @@ class PositionScene(QGraphicsScene):
         self.refresh()
 
     def _prepare_next_move(self):
-        position = self._position
+        self._check_result()
+        game = self._game
 
         for piece_item in self._board_pieces.childItems():
             if type(piece_item) is not QGraphicsPieceItem:
                 continue
 
-            piece = position.get(piece_item.square)
+            piece = game.get(piece_item.square)
             abbrev = piece.upper()
             player = 0 if abbrev == piece else 1
 
             self._update_movable(
                 player, piece_item,
-                lambda: position.legal_moves_from_square(piece_item.square))
+                lambda: game.legal_moves_from_square(piece_item.square))
 
-        for player in range(Position.NUM_PLAYERS):
+        for player in range(game.NUM_PLAYERS):
             for drop_item in self._hands[player].childItems():
                 if type(drop_item) is not QGraphicsDropItem:
                     continue
 
                 self._update_movable(
                     player, drop_item,
-                    lambda: position.legal_drops_with_piece(drop_item.abbrev))
+                    lambda: game.legal_drops_with_piece(drop_item.abbrev))
 
         if self.views():
             self.views()[0].update_title()
         if self._verbose:
-            print(position)
+            print(game.sfen)
+
+    def _check_result(self):
+        game = self._game
+        self._winner, reason = game.result()
+        if self._winner is None:
+            return
+
+        if self._winner == game.NUM_PLAYERS:
+            message = 'Draw'
+        else:
+            message = '{} won'.format(game.player_name(self._winner)
+                                          .capitalize())
+        message += ' ({})'.format(reason)
+
+        QMessageBox.information(None, 'Game result', message)
 
     def _update_movable(self, player, item, generator):
-        if player == self.player_to_move():
+        if self._winner is None and player == self.player_to_move():
             try:
                 next(generator())
                 item.setFlag(QGraphicsItem.ItemIsMovable)
@@ -269,27 +286,27 @@ class PositionScene(QGraphicsScene):
         pen = QPen()
         pen.setWidth(BOARD_STROKE)
 
-        position = self._position
+        game = self._game
 
         self._board = self.addRect(
             BOARD_STROKE / 2, BOARD_STROKE / 2,
-            SQUARE_SIZE * position.num_files + BOARD_STROKE - LINE_STROKE,
-            SQUARE_SIZE * position.num_ranks + BOARD_STROKE - LINE_STROKE,
+            SQUARE_SIZE * game.num_files + BOARD_STROKE - LINE_STROKE,
+            SQUARE_SIZE * game.num_ranks + BOARD_STROKE - LINE_STROKE,
             pen)
 
         pen.setWidth(LINE_STROKE)
 
-        for file in range(1, position.num_files):
+        for file in range(1, game.num_files):
             self.addLine(
                 LINE_OFFSET + SQUARE_SIZE * file, LINE_OFFSET,
                 LINE_OFFSET + SQUARE_SIZE * file,
-                LINE_OFFSET + SQUARE_SIZE * position.num_ranks,
+                LINE_OFFSET + SQUARE_SIZE * game.num_ranks,
                 pen)
 
-        for rank in range(1, position.num_ranks):
+        for rank in range(1, game.num_ranks):
             self.addLine(
                 LINE_OFFSET, LINE_OFFSET + SQUARE_SIZE * rank,
-                LINE_OFFSET + SQUARE_SIZE * position.num_files,
+                LINE_OFFSET + SQUARE_SIZE * game.num_files,
                 LINE_OFFSET + SQUARE_SIZE * rank,
                 pen)
 
@@ -299,8 +316,8 @@ class PositionScene(QGraphicsScene):
                 self._board.boundingRect().center())
 
         highlight_color = QColor(Qt.yellow).lighter()
-        for file in range(1, position.num_files+1):
-            for rank in range(1, position.num_ranks+1):
+        for file in range(1, game.num_files+1):
+            for rank in range(1, game.num_ranks+1):
                 square = file, rank
                 rect = QGraphicsRectItem(
                         self._coordinates.square_to_rect(square),
@@ -321,12 +338,12 @@ class PositionScene(QGraphicsScene):
         self._board_pieces.setTransformOriginPoint(
                 self._board.boundingRect().center())
 
-        position = self._position
+        game = self._game
 
-        for file in range(1, position.num_files+1):
-            for rank in range(1, position.num_ranks+1):
+        for file in range(1, game.num_files+1):
+            for rank in range(1, game.num_ranks+1):
                 square = file, rank
-                piece = position.get(square)
+                piece = game.get(square)
                 if piece:
                     self._board_pieces.put(square,
                                            self.draw_board_piece(square))
@@ -335,19 +352,19 @@ class PositionScene(QGraphicsScene):
         self.addItem(self._board_pieces)
 
     def draw_board_piece(self, square, ghost=False):
-        position = self._position
+        game = self._game
 
-        piece = position.get(square)
+        piece = game.get(square)
         abbrev = piece.upper()
-        kanji = position.pieces.kanji(abbrev)
+        kanji = game.pieces.kanji(abbrev)
 
         font = QFont(PIECE_FONT)
         font.setPixelSize(PIECE_SIZE)
 
-        text = QGraphicsPieceItem(kanji, self._board_pieces, position, square)
+        text = QGraphicsPieceItem(kanji, self._board_pieces, game, square)
         text.setFont(font)
 
-        if position.pieces.is_promoted(abbrev):
+        if game.pieces.is_promoted(abbrev):
             text.setBrush(QBrush(Qt.red))
 
         player = 0 if abbrev == piece else 1
@@ -364,12 +381,12 @@ class PositionScene(QGraphicsScene):
     def move(self, square, dest_square):
         player = self.player_to_move()
 
-        promotions = position.promotions(square, dest_square)
+        promotions = game.promotions(square, dest_square)
         if promotions == [False, True]:
             promotes = None
         else:
             promotes = promotions[0]
-        position.move(square, dest_square, promotes)
+        game.move(square, dest_square, promotes)
 
         piece_item = self._board_pieces.get(square)
         self.removeItem(piece_item)
@@ -386,7 +403,7 @@ class PositionScene(QGraphicsScene):
         if promotes is None:
             promotes = QMessageBox.question(None, 'Optional promotion',
                                             'Promotes?') == QMessageBox.Yes
-            position.choose_promotion(promotes)
+            game.choose_promotion(promotes)
             if promotes:
                 self.removeItem(self._board_pieces.get(dest_square))
                 self._board_pieces.put(dest_square,
@@ -396,7 +413,7 @@ class PositionScene(QGraphicsScene):
 
     def drop(self, abbrev, dest_square):
         player = self.player_to_move()
-        position.drop(abbrev, dest_square)
+        game.drop(abbrev, dest_square)
 
         self._redraw_hand(player)
 
@@ -418,9 +435,9 @@ class PositionScene(QGraphicsScene):
         self._file_labels = QGraphicsItemGroup()
         self._rank_labels = QGraphicsItemGroup()
 
-        position = self._position
+        game = self._game
 
-        for file in range(1, position.num_files+1):
+        for file in range(1, game.num_files+1):
             text = QGraphicsSimpleTextItem(str(file))
             text.setFont(font)
             text.setPos(self._x(file) * SQUARE_SIZE
@@ -431,7 +448,7 @@ class PositionScene(QGraphicsScene):
         self._file_labels.setPos(LINE_OFFSET + 0.5 * SQUARE_SIZE,
                                  - LABEL_OFFSET - LABEL_SIZE)
 
-        for rank in range(1, position.num_ranks+1):
+        for rank in range(1, game.num_ranks+1):
             text = QGraphicsSimpleTextItem(Coordinates.rank_label(rank))
             text.setFont(font)
             text.setPos((self._max_label_width
@@ -455,7 +472,7 @@ class PositionScene(QGraphicsScene):
         fm = QFontMetrics(font)
         self._max_label_width = max(
                 [fm.width(Coordinates.rank_label(rank)) for rank in
-                 range(1, self._position.num_ranks+1)])
+                 range(1, self._game.num_ranks+1)])
 
     def _redraw_hand(self, player):
         self.removeItem(self._hands[player])
@@ -465,11 +482,11 @@ class PositionScene(QGraphicsScene):
     def _draw_hand(self, player):
         self._hands[player] = QGraphicsItemParent()
 
-        position = self._position
-        hand = position.in_hand(player)
+        game = self._game
+        hand = game.in_hand(player)
 
         index = 0
-        for abbrev in reversed(position.droppable_pieces):
+        for abbrev in reversed(game.droppable_pieces):
             if abbrev in hand:
                 self._hands[player].put(
                         abbrev,
@@ -479,15 +496,15 @@ class PositionScene(QGraphicsScene):
         self.addItem(self._hands[player])
 
     def draw_piece_in_hand(self, player, index, abbrev, ghost=False):
-        position = self._position
-        kanji = position.pieces.kanji(abbrev)
+        game = self._game
+        kanji = game.pieces.kanji(abbrev)
 
-        column, row = divmod(index, position.num_ranks - 1)
-        row = (position.num_ranks - 1) - row  # 0 is bottom row
+        column, row = divmod(index, game.num_ranks - 1)
+        row = (game.num_ranks - 1) - row  # 0 is bottom row
 
         font = QFont(PIECE_FONT)
 
-        text = QGraphicsDropItem(kanji, self._hands[player], position, index,
+        text = QGraphicsDropItem(kanji, self._hands[player], game, index,
                                  abbrev, self._board_pieces)
         font.setPixelSize(PIECE_IN_HAND_SIZE)
         text.setFont(font)
@@ -497,7 +514,7 @@ class PositionScene(QGraphicsScene):
             text.setOpacity(GHOST_OPACITY)
             return text
 
-        num = QGraphicsSimpleTextItem(str(position.in_hand(player)[abbrev]),
+        num = QGraphicsSimpleTextItem(str(game.in_hand(player)[abbrev]),
                                       self._hands[player])
         font.setPixelSize(NUM_IN_HAND_SIZE)
         num.setFont(font)
@@ -511,15 +528,15 @@ class PositionScene(QGraphicsScene):
         return LABEL_OFFSET + self._max_label_width
 
     def _x(self, file):
-        return self._position.num_files - file if self.bottom_player == 0 \
-                                               else file-1
+        return self._game.num_files - file if self.bottom_player == 0 \
+                                           else file-1
 
     def _y(self, rank):
-        return self._position.num_ranks - rank if self.bottom_player == 1 \
-                                               else rank-1
+        return self._game.num_ranks - rank if self.bottom_player == 1 \
+                                           else rank-1
 
 
-class PositionView(QGraphicsView):
+class GameView(QGraphicsView):
     def __init__(self, scene):
         super().__init__(scene)
 
@@ -558,6 +575,8 @@ class PositionView(QGraphicsView):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('sfen', help='SFEN position')
+    parser.add_argument('--no-try', action='store_true',
+                        help='do not apply the Try Rule')
     parser.add_argument('--verbose', '-v', action='store_true',
                         help='show SFEN position after each move/drop')
     args = parser.parse_args()
@@ -567,8 +586,8 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     scene = QGraphicsScene()
 
-    position = Position(args.sfen, Pieces())
-    view = PositionView(PositionScene(position, args.verbose))
+    game = Game(args.sfen, Pieces(), not(args.no_try))
+    view = GameView(GameScene(game, args.verbose))
     view.update_title()
     view.show()
     sys.exit(app.exec_())
