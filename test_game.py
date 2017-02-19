@@ -27,6 +27,10 @@ class PositionTestCase(unittest.TestCase):
             else:
                 self.assertIsNone(game.result()[0])
 
+    def test_game_try_rule_no_kings(self):
+        game = Game('1g/3/1G w -', self._pieces, True)
+        self.assertIsNone(game.result()[0])
+
     def test_game_win_by_stalemate(self):
         game = Game('1k1/3/1K1 b BD@', self._pieces, True)
         game.drop('BD', (2, 2))

@@ -29,10 +29,14 @@ class Game:
     def result(self):
         opponent = self.NUM_PLAYERS - self.player_to_move - 1
 
+        if hasattr(self, '_try_squares'):
+            try_square = self._try_squares[opponent]
+        else:
+            try_square = None
+
         if self._status.endswith('mate'):
             return opponent, self._status
-        elif (hasattr(self, '_try_squares') and
-              self.royal_square(opponent) == self._try_squares[opponent]):
+        elif try_square and self.royal_square(opponent) == try_square:
             return opponent, 'try rule'
         return self._fourfold_repetition_result()
 
