@@ -15,9 +15,10 @@ class Game:
 
         self._update_history()
 
-        result = self.result()
+        result, reason = self.result()
         if result is not None:
-            raise ValueError('Game is already won by {}'.format(result))
+            raise ValueError('Game is already won by {} ({})'.format(
+                             result, reason))
 
     def __getattr__(self, name):
         return getattr(self._position, name)
@@ -34,10 +35,10 @@ class Game:
         opponent = self.NUM_PLAYERS - self.player_to_move - 1
 
         if self._status.endswith('mate'):
-            return opponent
+            return opponent, self._status
         elif (hasattr(self, '_try_squares') and
               self.royal_square(opponent) == self._try_squares[opponent]):
-            return opponent
+            return opponent, 'try rule'
         return self._fourfold_repetition_result()
 
     def move(self, square, dest_square, promotes=False):
@@ -69,18 +70,18 @@ class Game:
 
     def _fourfold_repetition_result(self):
         if len(self._sfens[self._sfen]) < 4:
-            return  # no four-fold repetition
+            return None, 'in progress'  # no four-fold repetition
 
         # receiving perpetual check
         if self._is_perpetual_check(0):
-            return self.player_to_move
+            return self.player_to_move, 'perpetual check'
 
         # giving perpetual_check
         if self._is_perpetual_check(1):
             opponent = self.NUM_PLAYERS - self.player_to_move - 1
-            return opponent
+            return opponent, 'perpetual check'
 
-        return self.NUM_PLAYERS  # draw
+        return self.NUM_PLAYERS, 'fourfold repetition'  # draw
 
     def _is_perpetual_check(self, offset):
         assert self._sfens[self._sfen][3] == self._half_moves
