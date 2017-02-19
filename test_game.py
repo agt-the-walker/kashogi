@@ -13,7 +13,7 @@ class PositionTestCase(unittest.TestCase):
 
     def test_game_win_by_try_rule(self):
         for try_rule in [False, True]:
-            game = Game('1k1/3/1K1 w -', self._pieces, try_rule)
+            game = Game('1k1/3/1K1 w P', self._pieces, try_rule)
             game.move((2, 1), (1, 1))
             game.move((2, 3), (3, 3))
             game.move((1, 1), (1, 2))
@@ -24,8 +24,25 @@ class PositionTestCase(unittest.TestCase):
 
             if try_rule:
                 self.assertEqual(game.result(), (1, 'try rule'))
+
+                self.assertEqual(set(game.legal_moves_from_square((3, 1))),
+                                 set())
+                with self.assertRaisesRegex(
+                        ValueError, 'Illegal move: game already decided'):
+                    game.move((3, 1), (2, 1))
+
+                self.assertEqual(set(game.legal_drops_with_piece('P')), set())
+                with self.assertRaisesRegex(
+                        ValueError, 'Illegal drop: game already decided'):
+                    game.drop('P', (2, 2))
             else:
                 self.assertIsNone(game.result()[0])
+
+                self.assertEqual(set(game.legal_moves_from_square((3, 1))),
+                                 {(2, 1)})
+                self.assertEqual(set(game.legal_drops_with_piece('P')),
+                                 {(3, 2), (2, 2), (1, 2),
+                                  (3, 3),         (1, 3)})
 
     def test_game_try_rule_no_kings(self):
         game = Game('1g/3/1G w -', self._pieces, True)

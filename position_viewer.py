@@ -228,7 +228,6 @@ class GameScene(QGraphicsScene):
 
     def _prepare_next_move(self):
         game = self._game
-        self._winner, self._result_reason = game.result()
 
         for piece_item in self._board_pieces.childItems():
             if type(piece_item) is not QGraphicsPieceItem:
@@ -262,20 +261,20 @@ class GameScene(QGraphicsScene):
         title += '{}'.format(Position.player_name(self.player_to_move()))
         self.views()[0].setWindowTitle(title)
 
-        if self._winner is None:
+        winner, result_reason = game.result()
+        if winner is None:
             return
 
-        if self._winner == game.NUM_PLAYERS:
+        if winner == game.NUM_PLAYERS:
             message = 'Draw'
         else:
-            message = '{} won'.format(game.player_name(self._winner)
-                                          .capitalize())
-        message += ' ({})'.format(self._result_reason)
+            message = '{} won'.format(game.player_name(winner).capitalize())
+        message += ' ({})'.format(result_reason)
 
         QMessageBox.information(None, 'Game result', message)
 
     def _update_movable(self, player, item, generator):
-        if self._winner is None and player == self.player_to_move():
+        if player == self.player_to_move():
             try:
                 next(generator())
                 item.setFlag(QGraphicsItem.ItemIsMovable)

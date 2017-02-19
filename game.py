@@ -27,6 +27,9 @@ class Game:
         return self._sfen
 
     def result(self):
+        return self._winner, self._result_reason
+
+    def _update_result(self):
         opponent = self.NUM_PLAYERS - self.player_to_move - 1
 
         if hasattr(self, '_try_squares'):
@@ -35,23 +38,41 @@ class Game:
             try_square = None
 
         if self._status.endswith('mate'):
-            return opponent, self._status
+            self._winner, self._result_reason = opponent, self._status
         elif try_square and self.royal_square(opponent) == try_square:
-            return opponent, 'try rule'
-        return self._fourfold_repetition_result()
+            self._winner, self._result_reason = opponent, 'try rule'
+        else:
+            self._winner, self._result_reason = \
+                    self._fourfold_repetition_result()
 
     def move(self, square, dest_square, promotes=False):
+        if self._winner is not None:
+            raise ValueError('Illegal move: game already decided')
+
         self._position.move(square, dest_square, promotes)
         if promotes is not None:
             self._update_history()
+
+    def legal_moves_from_square(self, square, player=None):
+        if self._winner is not None:
+            return
+        yield from self._position.legal_moves_from_square(square, player)
 
     def choose_promotion(self, promotes):
         self._position.choose_promotion(promotes)
         self._update_history()
 
     def drop(self, abbrev, dest_square):
+        if self._winner is not None:
+            raise ValueError('Illegal drop: game already decided')
+
         self._position.drop(abbrev, dest_square)
         self._update_history()
+
+    def legal_drops_with_piece(self, abbrev):
+        if self._winner is not None:
+            return
+        yield from self._position.legal_drops_with_piece(abbrev)
 
     def _update_history(self):
         self._status = self.status()
@@ -66,6 +87,8 @@ class Game:
         self._sfen = str(self._position)
         self._sfens[self._sfen].append(self._half_moves)
         self._in_check.append(self._status.startswith('check'))
+
+        self._update_result()
 
     def _fourfold_repetition_result(self):
         if len(self._sfens[self._sfen]) < 4:
