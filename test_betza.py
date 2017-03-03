@@ -46,7 +46,7 @@ class BetzaTestCase(unittest.TestCase):
                    False)
 
     def test_charging_rook(self):
-        self.check('frlRrrllbK',
+        self.check('frlRbK',
                    {             (0,  1): 0,                            # noqa
                     (-1,  0): 0,             (1,  0): 0,
                     (-1, -1): 1, (0, -1): 1, (1, -1): 1},
