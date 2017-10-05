@@ -111,6 +111,14 @@ class BetzaTestCase(unittest.TestCase):
                    {(0, 1): 0},
                    True, 1, True, False, False)
 
+    def test_leopard(self):
+        self.check('B2N',
+                   {             (-1,  2): 1, (1,  2): 1,               # noqa
+                    (-2,  1): 1, (-1,  1): 2, (1,  1): 2, (2,  1): 1,
+                    (-2, -1): 1, (-1, -1): 2, (1, -1): 2, (2, -1): 1,
+                                 (-1, -2): 1, (1, -2): 1},              # noqa
+                   True)
+
     def test_left_quail(self):
         self.check('fRbrBblF',
                    {             (0, 1): 0,                             # noqa
