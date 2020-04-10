@@ -565,6 +565,8 @@ class GameView(QGraphicsView):
             self.scene().flip_view()
         elif event.text() == 'l':
             self.scene().toggle_board_labels()
+        elif event.key() == Qt.Key_Escape:
+            self.close()
 
 
 if __name__ == '__main__':
