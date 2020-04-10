@@ -551,8 +551,8 @@ class GameView(QGraphicsView):
     def resize(self, zoom_level=None):
         if zoom_level:
             self._zoom_level = zoom_level
-        self.setFixedSize(self._zoom_level * self.scene().width(),
-                          self._zoom_level * self.scene().height())
+        self.setFixedSize(self._zoom_level * int(self.scene().width()),
+                          self._zoom_level * int(self.scene().height()))
 
     def keyPressEvent(self, event):
         if event.text().isdigit():
