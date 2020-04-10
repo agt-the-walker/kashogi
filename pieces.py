@@ -23,7 +23,7 @@ class Pieces:
         self._max_per_file = {}
 
         for abbrev, info in doc.items():
-            if not re.match("\+?[A-Z]['A-Z]?$", abbrev):
+            if not re.match(r"\+?[A-Z]['A-Z]?$", abbrev):
                 raise PiecesException('Invalid piece abbreviation: {}'
                                       .format(abbrev))
 

@@ -25,9 +25,10 @@ class PositionTestCase(unittest.TestCase):
         self.assertEqual(position.in_hand(1), {'B': 1, 'G': 1, 'N': 1, 'P': 3})
         self.assertEqual(position.royal_square(1), (9, 4))
 
-        with self.assertRaisesRegex(ValueError, 'Square \(9, 2\) is empty'):
+        with self.assertRaisesRegex(ValueError, r'Square \(9, 2\) is empty'):
             next(position.legal_moves_from_square((9, 2)))
-        with self.assertRaisesRegex(ValueError, 'Square \(7, 2\) is not ours'):
+        with self.assertRaisesRegex(ValueError,
+                                    r'Square \(7, 2\) is not ours'):
             next(position.legal_moves_from_square((7, 2)))
 
         with self.assertRaisesRegex(ValueError, 'Piece S is not in hand'):

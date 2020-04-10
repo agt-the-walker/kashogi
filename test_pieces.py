@@ -37,10 +37,10 @@ class PiecesTestCase(unittest.TestCase):
 
     def test_cannot_have_flags(self):
         with self.assertRaisesRegex(PiecesException,
-                                    'Promoted piece \+P cannot have flags'):
+                                    r'Promoted piece \+P cannot have flags'):
             Pieces('support/cannot_have_flags_max_per_file.yaml')
         with self.assertRaisesRegex(PiecesException,
-                                    'Promoted piece \+K cannot have flags'):
+                                    r'Promoted piece \+K cannot have flags'):
             Pieces('support/cannot_have_flags_royal.yaml')
 
     def test_cannot_advance(self):
@@ -49,7 +49,7 @@ class PiecesTestCase(unittest.TestCase):
 
     def test_cannot_retreat(self):
         with self.assertRaisesRegex(PiecesException,
-                                    'Promoted piece \+P cannot retreat'):
+                                    r'Promoted piece \+P cannot retreat'):
             Pieces('support/cannot_retreat_promoted.yaml')
         with self.assertRaisesRegex(PiecesException,
                                     'Unpromotable piece L cannot retreat'):
@@ -62,7 +62,7 @@ class PiecesTestCase(unittest.TestCase):
 
     def test_cannot_unpromote(self):
         with self.assertRaisesRegex(PiecesException,
-                                    'Unpromoted version of \+P missing'):
+                                    r'Unpromoted version of \+P missing'):
             Pieces('support/cannot_unpromote.yaml')
 
     def test_can_change_file(self):

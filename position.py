@@ -14,7 +14,7 @@ class Position:
     def __init__(self, sfen, pieces):
         self._pieces = pieces
 
-        m = re.match("(\S+) ([wb]) (\S+)", sfen)
+        m = re.match(r"(\S+) ([wb]) (\S+)", sfen)
         if not m:
             raise ValueError('Invalid SFEN')
 
@@ -98,7 +98,7 @@ class Position:
             self._parse_rank(sfen_rank, rank, True)
 
     def _parse_rank(self, sfen_rank, rank, num_files_known):
-        tokens = re.findall('\+?' + self.UNPROMOTED_PIECE_REGEX + '|\d+',
+        tokens = re.findall(r'\+?' + self.UNPROMOTED_PIECE_REGEX + r'|\d+',
                             sfen_rank)
         file = 0
 
