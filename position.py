@@ -110,7 +110,7 @@ class Position:
                     self._parse_piece(token, rank, self._num_files - file)
                 file += 1
 
-        if not(num_files_known) and file > self._num_files:
+        if not (num_files_known) and file > self._num_files:
             self._num_files = file
 
     def _parse_piece(self, piece, rank, file):
@@ -367,7 +367,7 @@ class Position:
         if captured_piece:
             self._board[dest_square] = captured_piece
 
-        assert(None not in self._board.values())
+        assert (None not in self._board.values())
 
         return result
 
@@ -517,7 +517,7 @@ class Position:
         # revert the drop to restore the board to its initial state
         del self._board[dest_square]
 
-        assert(None not in self._board.values())
+        assert (None not in self._board.values())
 
         return result
 

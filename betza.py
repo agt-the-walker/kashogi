@@ -111,12 +111,12 @@ class Betza:
             return True
 
         # all
-        if not(repeated) or abs(dx) < abs(dy):
+        if not (repeated) or abs(dx) < abs(dy):
             if modifier == 'b' and dy < 0:
                 return True
             elif modifier == 'f' and dy > 0:
                 return True
-        if not(repeated) or abs(dx) > abs(dy):
+        if not (repeated) or abs(dx) > abs(dy):
             if modifier == 'l' and dx < 0:
                 return True
             elif modifier == 'r' and dx > 0:

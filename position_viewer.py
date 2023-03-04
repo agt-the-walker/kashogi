@@ -582,7 +582,7 @@ if __name__ == '__main__':
 
     app = QApplication(sys.argv)
 
-    game = Game(args.sfen, Pieces(), not(args.no_try))
+    game = Game(args.sfen, Pieces(), not (args.no_try))
     scene = GameScene(game, args.verbose)
     view = GameView(scene)
 
