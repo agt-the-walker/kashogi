@@ -384,7 +384,7 @@ class GameScene(QGraphicsScene):
         player = self.player_to_move()
 
         promotions = game.promotions(square, dest_square)
-        if promotions == [False, True]:
+        if len(promotions) > 1:
             promotes = None
         else:
             promotes = promotions[0]
@@ -403,8 +403,10 @@ class GameScene(QGraphicsScene):
         self._board_pieces.put(dest_square, self.draw_board_piece(dest_square))
 
         if promotes is None:
-            promotes = QMessageBox.question(None, 'Optional promotion',
-                                            'Promotes?') == QMessageBox.Yes
+            default = QMessageBox.Yes if promotions[0] else QMessageBox.No
+            promotes = QMessageBox.question(
+                    None, 'Optional promotion', 'Promotes?',
+                    defaultButton=default) == QMessageBox.Yes
             game.choose_promotion(promotes)
             if promotes:
                 self.removeItem(self._board_pieces.get(dest_square))
