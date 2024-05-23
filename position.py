@@ -278,6 +278,13 @@ class Position:
         # captured piece goes in hand
         if captured_piece:
             captured_abbrev = captured_piece.upper()
+
+            captured_max_per_file = self._pieces.max_per_file(captured_abbrev)
+            if captured_max_per_file:
+                file, _ = dest_square
+                opponent = self.NUM_PLAYERS - player - 1
+                self._num_per_file[opponent][captured_abbrev][file] -= 1
+
             if self._pieces.is_promoted(captured_abbrev):
                 captured_abbrev = self._pieces.unpromoted(captured_abbrev)
             self._hands[player][captured_abbrev] += 1
@@ -285,12 +292,6 @@ class Position:
         # update statistics
         if self._royal_squares[player] == square:
             self._royal_squares[player] = dest_square
-        if captured_piece:
-            captured_max_per_file = self._pieces.max_per_file(captured_abbrev)
-            if captured_max_per_file:
-                file, _ = dest_square
-                opponent = self.NUM_PLAYERS - player - 1
-                self._num_per_file[opponent][captured_abbrev][file] -= 1
 
         # end turn unless promotion is deferred
         if promotes is None:

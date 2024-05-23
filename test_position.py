@@ -434,6 +434,19 @@ class PositionTestCase(unittest.TestCase):
         self.assertEqual(str(position), '1+Lk/3/K2 w R')
         self.assertEqual(position.status(), 'check')
 
+    def test_capture_promoted_pawn(self):
+        position = self.check('1k1/p2/+p1K/P2 b -', expected_num_ranks=4)
+
+        position.move((3, 4), (3, 3))  # capture promoted
+        self.assertEqual(str(position), '1k1/p2/P1K/3 w P')
+        position.move((3, 2), (3, 3))  # capture back
+        self.assertEqual(str(position), '1k1/3/p1K/3 b Pp')
+        position.drop('P', (3, 2))
+        self.assertEqual(str(position), '1k1/P2/p1K/3 w p')
+
+        with self.assertRaisesRegex(ValueError, 'Illegal drop'):
+            position.drop('P', (3, 1))  # nifu
+
     def test_deferred_promotion(self):
         sfen = '2k/SPs/K2 b -'
         position = self.check(sfen)
